@@ -18,6 +18,7 @@ define('DS', DIRECTORY_SEPARATOR);
 
 define('DJCK', dirname(__FILE__));
 define('CORE_PATH', dirname(DJCK).DS.'core');
+define('PLUGIN_PATH', dirname(DJCK).DS.'plugins');
 
 require CORE_PATH.DS.'bootstrap.php';
 

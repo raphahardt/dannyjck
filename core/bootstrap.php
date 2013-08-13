@@ -23,6 +23,12 @@ if (!defined('APP_PATH'))
 if (!defined('CORE_PATH'))
   define('CORE_PATH', DJCK.DS.'core');
 
+/**
+ * Pasta absoluta dos "plugins" do projeto
+ */
+if (!defined('PLUGIN_PATH'))
+  define('PLUGIN_PATH', DJCK.DS.'plugins');
+
 define('OS', PHP_OS);
 
 date_default_timezone_set('America/Sao_Paulo');
@@ -31,11 +37,15 @@ date_default_timezone_set('America/Sao_Paulo');
 include CORE_PATH.DS.'basics.php';
 
 // CORE
-include CORE_PATH.DS.'core'.DS.'Core.class.php';
+include CORE_PATH.DS.'core'.DS.'Core.php';
 
 // carrega primeiro as definicoes do app, depois do core
 include APP_PATH.DS.'cfg'.DS.'defs.php';
 include CORE_PATH.DS.'defs.php';
+
+Core::import('Response', 'core/network');
+Core::import('Usuario', 'model/usuario');
+Core::import('Smarty', 'plugin/smarty');
 
 if (!defined('DEFS_ONLY'))
   include CORE_PATH.DS.'load.php';
