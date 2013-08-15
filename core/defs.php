@@ -25,6 +25,8 @@ if (!defined('SITE_COPYRIGHT'))
 if (!defined('SITE_URL')) {
   $root = str_replace('/', DS, env('DOCUMENT_ROOT'));
   $baseurl = str_replace(DS, '/', str_ireplace($root, '', DJCK));
+  if (strpos($baseurl, '/') !== 0)
+    $baseurl = '/'.$baseurl;
   
   define('SITE_URL', $baseurl);
   
@@ -44,7 +46,7 @@ if (!defined('SITE_FULL_URL')) {
   if (!isset($http_host)) {
     $http_host = env('SERVER_NAME');
   }
-  define('SITE_FULL_URL', 'http'.$s.'://'.$http_host.SITE_URL);
+  define('SITE_FULL_URL', 'http'.$s.'://'.$http_host . SITE_URL);
   
   unset($http_host, $s);
 }

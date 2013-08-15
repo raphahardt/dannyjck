@@ -43,9 +43,5 @@ include CORE_PATH.DS.'core'.DS.'Core.php';
 include APP_PATH.DS.'cfg'.DS.'defs.php';
 include CORE_PATH.DS.'defs.php';
 
-Core::import('Response', 'core/network');
-Core::import('Usuario', 'model/usuario');
-Core::import('Smarty', 'plugin/smarty');
-
 if (!defined('DEFS_ONLY'))
   include CORE_PATH.DS.'load.php';

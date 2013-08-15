@@ -21,17 +21,23 @@ if (!defined('PLUGIN_PATH'))
  */
 abstract class Core {
   
+  // classes importadas do core
   private static $imported = array();
+  
+  // classes registradas para serem carregadas pelo autoload do core
   private static $classes = array();
+  
+  // numero de chamadas de funcao do core
+  private static $calls = 0;
 
   /**
    * Tipo de arquivo
-   *    - class => são as classes que do core que são próŕias do sistema
-   *    - file => são arquivos que estão disponíveis na pasta de download e upload
-   *    - model => Carrega os modelo que será usado na aplicação já instancia a classe pai AppModel.class.php
-   *    - controller => Carrega o controller que será usado na aplicação já instancia a classe pai AppController.class.php
-   *    - view => Carrega a view(template) que sera usado
-   *    - helper => Carrega o helpper que sera usado
+   * Deve conter as seguintes configurações:
+   *  - core: TRUE para buscar do core/, FALSE para buscar do app/
+   *  - path: caminho onde o arquivo será encontrado, relativo ao app/ ou core/ de acordo
+   *          com a opção core acima
+   *  - root: TRUE para buscar da raiz do projeto, FALSE para buscar relativo ao core/ ou app/
+   *  - plugins: TRUE para buscar da pasta dos plugins, FALSE para buscar relativo ao core/ ou app/
    * @var type tipo do arquivo que sera carregado
    */
   public static $types = array(
@@ -41,10 +47,26 @@ abstract class Core {
       'controller' => array('core' => false, 'path' => 'controller'),
       'plugin' => array('plugins' => true),
       'file' => array('root' => true),
+      'root' => array('root' => true),
   );
   
-  static function uses() {
+  // registra a classe que vc vai usar no contexto para ser carregada pelo autoload
+  static function uses($class, $path, $force = false) {
+    // pega pasta correta
+    $parsed = self::_parseFile($class, $path);
     
+    // sanitize class name
+    $class = strtolower($class);
+    
+    // Only attempt to register the class if the name and file exist.
+    if (!empty($class) && is_file($parsed)) {
+      // Register the class with the autoloader if not already registered or the force flag is set.
+      if (empty(self::$classes[$class]) || $force) {
+        self::$classes[$class] = $parsed;
+      }
+    }
+    
+    ++self::$calls;
   }
   
   // retorna o caminho correto
@@ -108,9 +130,6 @@ abstract class Core {
     $alias = '';
     $parsed = self::_parseFile($file, $path, $alias);
     
-    echo $parsed,'<br>',$alias,'<br>';
-    return;
-    
     // checa se o arquivo já foi carregado e se vai força-lo a sobrecarrega-lo
     if (!isset(self::$imported[$alias]) || $force) {
       
@@ -136,19 +155,57 @@ abstract class Core {
       self::$imported[$alias] = $success;
       
     }
+    ++self::$calls;
     return self::$imported[$alias];
   }
   
-  static function depends() {
+  // carrega uma classe
+  public static function load($class) {
+    // Sanitize class name.
+    $class = strtolower($class);
     
+    ++self::$calls;
+
+    // If the class already exists do nothing.
+    if (class_exists($class, false)) {
+      return true;
+    }
+
+    // If the class is registered include the file.
+    if (isset(self::$classes[$class])) {
+      //echo self::$classes[$class];
+      include_once self::$classes[$class];
+      return true;
+    }
+
+    return false;
   }
   
-  static function register() {
+  // verifica se a classe já foi carregada, se não, lançar uma exception
+  static function depends($class) {
+    ++self::$calls;
     
+    // If the class already exists do nothing.
+    if (!class_exists(strtolower($class), false)) {
+      $trace = debug_backtrace();
+      throw new Exception('Arquivo '.basename($trace[0]['file']).' depende da classe '.$class);
+    }
+  }
+  
+  // alias para ::uses
+  static function register($class, $path, $force = false) {
+    self::uses($class, $path, $force);
   }
   
   static function setup() {
-    
+    spl_autoload_register(array('Core', 'load'));
+  }
+  
+  static function dump() {
+    global $Router;
+    echo '<pre>';
+    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION));
+    echo '</pre>';
   }
   
 }

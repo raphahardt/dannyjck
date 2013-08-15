@@ -1,9 +1,9 @@
 <?php
 
-Core::uses('Request', 'core/network');
-Core::uses('Response', 'core/network');
+Core::depends('Request');
+Core::depends('Response');
 
-class Controller {
+abstract class Controller {
   
   public $request;
   public $response;
@@ -33,5 +33,7 @@ class Controller {
   public function afterExecute() {
     return;
   }
+  
+  abstract function index();
   
 }

@@ -1,7 +1,6 @@
 <?php
 
-//App::uses('Request', 'core/network');
-//App::uses('Response', 'core/network');
+Core::uses('Controller', 'core/mvc/controller');
 
 class RouterException extends Exception {}
 
@@ -25,7 +24,7 @@ class Router {
     // procura o controller se $controller for um link (string)
     // o link deve ser da seguinte forma: url_id#action
     // se action for omitido, "index" é usado
-    if (is_string($controller)) {
+    /*if (is_string($controller)) {
       list($url, $method) = explode('#', $controller);
       if (!$method)
         $method = null;
@@ -36,7 +35,7 @@ class Router {
         
         $path = $this->connected_routes[$url]['path'];
       }
-    }
+    }*/
 
     // guarda rota no array interno de rotas conectadas
     $this->connected_routes[$url_id] = array(
@@ -140,13 +139,30 @@ class Router {
     if ($visibility == 'hidden' && $this->url == $url_id) { //impede que acessem a rota se ela for invisivel
       return $this->route('error', null, 403);
     }*/
+    $controller = &$this->connected_routes[$url_id]['controller'];
+    $path = &$this->connected_routes[$url_id]['path'];
+    // procura o controller se $controller for um link (string)
+    // o link deve ser da seguinte forma: url_id#action
+    // se action for omitido, "index" é usado
+    if (is_string($controller)) {
+      list($url, $method) = explode('#', $controller);
+      if (!$method)
+        $method = null;
+      
+      if (isset($this->connected_routes[$url])) {
+        $class = key($this->connected_routes[$url]['controller']);
+        $controller = array($class => $method);
+        
+        $path = $this->connected_routes[$url]['path'];
+      }
+    }
 
     // pega a ação e o controller a ser usado
-    if (is_array($this->connected_routes[$url_id]['controller']))
-      list($class_name, $action) = each($this->connected_routes[$url_id]['controller']);
+    if (is_array($controller))
+      list($class_name, $action) = each($controller);
 
     //acerto o path do meu view
-    $dir = $this->connected_routes[$url_id]['path'];
+    $dir = $path;
 
     if (is_null($action) && !empty($params) && isset($params[0])) {
       //extrai a 'acao'
@@ -155,18 +171,11 @@ class Router {
     
     // controla o buffer
     ob_start();
-    
-    // cria o request
-    /*$request = new Request();
-    $request->addParams($params);
-    
-    $response = new Response();
-    $response->statusCode($response_code);*/
 
     // verifica se a classe existe
     if (class_exists($class_name)) {
-
       $class = new $class_name($dir);
+
       $class->request->addParams($params);
       $class->response->statusCode($response_code);
 

@@ -2,4 +2,7 @@
 
 require 'core/bootstrap.php';
 
-dump();
+$Router->dispatch($_GET['q']);
+
+Core::dump();
+//dump();
