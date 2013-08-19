@@ -1,6 +1,8 @@
 <?php
 
-class ModelException extends Exception {}
+Core::depends('SQLBase');
+
+class ModelException extends CoreException {}
 
 abstract class ModelCommon implements ArrayAccess, Countable {
   
@@ -51,9 +53,18 @@ abstract class ModelCommon implements ArrayAccess, Countable {
    */
   protected $transaction = false;
   protected $transaction_status = null; // guarda o status do autocommit anterior
+  
+  static $dump = array();
+  
+  protected function _to_dump($sql, $bind) {
+    self::$dump[] = array(
+      'sql' => $sql,
+      'bind' => $bind
+    );
+  }
 
   public function __construct() {
-    $this->database = BD::getInstance();
+    $this->database = Dbc::getInstance();
   }
   
   /**

@@ -10,10 +10,24 @@ Core::uses('AppController', 'controller');
 class HomeController extends AppController {
   
   function index() {
+    echo base64_encode('fastmotors').'<br>';
     echo $this->request->referer().'<br>';
     echo 'index';
-    echo '<img src="imagem.jpg" />';
+    //echo '<img src="imagem.jpg" />';
     echo '<a href="add/">add</a>';
+    $this->session['teste'] = 'aaa';
+    echo '<pre style="background:#ddd">';
+    //var_dump($this->session['teste']);
+    
+    Core::uses('SessionModel', 'model/session');
+    
+    $s = new SessionModel();
+    //$s->setFilterValues('0-d19e796e25333eae1b58258bfa5c4ef7-2130706433-5');
+    //$s->setFilterValues('gnfudignfduigd');
+    $s->select();
+    var_dump($s['sid']);
+    
+    echo '</pre>';
   }
   
   function favicon() {

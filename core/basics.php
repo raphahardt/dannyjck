@@ -109,6 +109,30 @@ if (!function_exists('env')) {
 
 }
 
+if (!function_exists('g_token')) {
+  
+  /**
+   * Gera uma string token unica
+   * @return string
+   */
+  function g_token() {
+    return md5(uniqid()).mt_rand(5, 15).mt_rand(0, 5);
+  }
+  
+}
+
+if (!function_exists('g_sessionid')) {
+  
+  /**
+   * Gera uma string token unica
+   * @return string
+   */
+  function g_sessionid() {
+    return sprintf('%d-%s-%u-%d', mt_rand(0,9), md5(uniqid()), ip2long(env('REMOTE_ADDR')), mt_rand(0, 5));
+  }
+  
+}
+
 if (!function_exists('dump')) {
   
   function dump() {

@@ -27,6 +27,9 @@ class ModelCollection extends ModelCommon implements Iterator {
    * @throws ModelException
    */
   public function __construct() {
+    $this->pointer = 0;
+    $this->add_data = array();
+    
     parent::__construct();
   }
   
@@ -59,8 +62,8 @@ class ModelCollection extends ModelCommon implements Iterator {
    * @return mixed Model
    */
   public function current() {
-    return $this->offsetGet($this->pointer);
-    //return $this->recordset_data[$this->pointer];
+    //return $this->offsetGet($this->pointer);
+    return $this->recordset_data[$this->pointer];
   }
 
   /**
@@ -139,7 +142,7 @@ class ModelCollection extends ModelCommon implements Iterator {
    */
   public function offsetGet($offset) {
     if (is_numeric($offset)) {
-      /*if ($row = $this->recordset_data[$offset]) {
+      if ($row = $this->recordset_data[$offset]) {
         $modelname = str_replace('Collection', '', get_class($this));
         $model = new $modelname();
         foreach ($row as $col => $val) {
@@ -150,8 +153,9 @@ class ModelCollection extends ModelCommon implements Iterator {
           $model->fields[SQLBase::key($col)]->setValue($val);
         }
         return $model;
-      }*/
-      return isset($this->recordset_data[$offset]) ? $this->recordset_data[$offset] : null;
+      }
+      return null;
+      //return isset($this->recordset_data[$offset]) ? $this->recordset_data[$offset] : null;
     } else {
       return $this->fields[ SQLBase::key($offset) ];
     }
@@ -299,7 +303,7 @@ class ModelCollection extends ModelCommon implements Iterator {
       if ($success = $success && $bd->prepare($sql)) {
         foreach ($bind_v as $k => $value) {
           // binda o valor
-          $bd->bind_param($k, $bind_v[$k]);
+          $bd->bind_param($bind_v[$k]);
         }
 
         // executa a query
@@ -353,26 +357,18 @@ class ModelCollection extends ModelCommon implements Iterator {
     if ($this->permanentDelete !== true) {
       $where[] = _c(new SQLField(self::DEFAULT_DELETE_NAME), '=', '0');
     }
-    $where[] = _c(new SQLField('ROWNUM'), '<=', max($this->offset+$this->limit, $this->max_limit));
-    $where = new SQLExpression('AND', $where);
+    //$where[] = _c(new SQLField('ROWNUM'), '<=', max($this->offset+$this->limit, $this->max_limit));
+    if ($where)
+      $where = new SQLExpression('AND', $where);
 
     // cria o SQL
-    $ftotal = new SQLField('*');
-    $ftotal->setFunction('count');
-    $ftotal->setOver('order by 1');
-    $ftotal->setAlias('total');
     
-    $frn = new SQLField('ROW_NUMBER()');
-    $frn->setOver('order by 1');
-    $frn->setAlias('r_n');
-    
-    $frnw = new SQLField('r_n');
-    
-    $instruction = new SQLISelect(array_merge($this->fields, array($ftotal, $frn)), $this->tables, $where, $this->order);
-    $sup_instruction = new SQLISelect(array('*'), $instruction, _c($frnw, 'BETWEEN', array($this->offset+1, $this->offset+$this->limit)));
-    $sql = (string) $sup_instruction;
+    $instruction = new SQLISelect($this->fields, $this->tables, $where, $this->order);
+    //$sup_instruction = new SQLISelect(array('*'), $instruction, _c($frnw, 'BETWEEN', array($this->offset+1, $this->offset+$this->limit)));
+    $sql = (string) $instruction;
     $bind_v = $instruction->getBinds();
     
+    $this->_to_dump($sql, $bind_v);
     //print_r(array( $sql, $bind_v));
     
     $this->recordset_data = array();
@@ -381,7 +377,7 @@ class ModelCollection extends ModelCommon implements Iterator {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($k, $bind_v[$k]);
+        $bd->bind_param($bind_v[$k]);
       }
 
       // executa a query
@@ -458,7 +454,7 @@ class ModelCollection extends ModelCommon implements Iterator {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($k, $bind_v[$k]);
+        $bd->bind_param($bind_v[$k]);
       }
 
       // executa a query

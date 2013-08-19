@@ -29,6 +29,12 @@ if (!defined('CORE_PATH'))
 if (!defined('PLUGIN_PATH'))
   define('PLUGIN_PATH', DJCK.DS.'plugins');
 
+/**
+ * Pasta absoluta dos arquivos temporarios do projeto
+ */
+if (!defined('TEMP_PATH'))
+  define('TEMP_PATH', DJCK.DS.'_tmp');
+
 define('OS', PHP_OS);
 
 date_default_timezone_set('America/Sao_Paulo');

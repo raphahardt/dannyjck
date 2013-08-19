@@ -1,19 +1,19 @@
 <?php
 
 Core::depends('Cookie');
-Core::depends('Dbc');
-Core::uses('Request', 'core/network');
 
-class SessionException extends Exception {};
+class SessionFileException extends Exception {};
 
-class Session implements ArrayAccess, Countable {
+class SessionFile implements ArrayAccess, Countable {
   
   private $reserved_names = array(
       SESSION_USER_NAME => 1, SESSION_TOKEN_NAME => 1, 'id' => 1, 'logged' => 1
   );
   
   static private $started = false;
-
+  
+  static private $savePath;
+  
   static public function isStarted() {
     return self::$started;
   }
@@ -68,6 +68,11 @@ class Session implements ArrayAccess, Countable {
   }
   
   static public function open($savePath, $session_name) {
+    
+    self::$savePath = $savePath.DS;
+    if (!is_dir(self::$savePath)) {
+        mkdir(self::$savePath, 0777);
+    }
     return true;
   }
 
@@ -76,79 +81,32 @@ class Session implements ArrayAccess, Countable {
   }
 
   static public function read($sid) {
-    
-    $string = '';
-    
-    $dbc = Dbc::getInstance();
-    $dbc->prepare('select * from fm_session where sid = ?');
-    $dbc->bind_param($sid);
-    if ($dbc->execute()) {
-      $row = $dbc->fetch_assoc();
-      
-      $string = self::_decryptData($row['sessao'], SESSION_NAME);
-    }
-    $dbc->free();
-    
-    return $string;
+    return self::_decryptData((string)@file_get_contents(self::$savePath."sess_$sid"), SESSION_NAME);
   }
 
   static public function write($sid, $data) {
-    
-    $req = new Request();
-    
-    $ip = $req->clientIp();
-    $timestamp = time();
-    $data = self::_encryptData($data, SESSION_NAME);
-    
-    // pega o id do usuario logado
-    $user = $_SESSION[ SESSION_USER_NAME ];
-    $uid = (is_object($user) && $user->id) ? $user->id : 0;
-    
-    $dbc = Dbc::getInstance();
-    $dbc->prepare('insert into fm_session (id,sid,ip,timestamp,sessao) values (?,?,?,?,?) on duplicate key update id=?, timestamp=?,sessao=?');
-    // insert
-    $dbc->bind_param($uid);
-    $dbc->bind_param($sid);
-    $dbc->bind_param($ip);
-    $dbc->bind_param($timestamp);
-    $dbc->bind_param($data);
-    // update
-    $dbc->bind_param($uid);
-    $dbc->bind_param($timestamp);
-    $dbc->bind_param($data);
-    $success = $dbc->execute();
-
-    $dbc->free();
-    
-    return $success;
-    
+    return file_put_contents(self::$savePath."sess_$sid", self::_encryptData($data)) === false ? false : true;
   }
 
   static public function destroy($sid) {
     
-    $dbc = Dbc::getInstance();
-    $dbc->prepare('delete from fm_session where sid = ?');
-    $dbc->bind_param($sid);
-    $success = $dbc->execute();
-
-    $dbc->free();
-    
-    return $success;
+    $file = self::$savePath."sess_$sid";
+    if (file_exists($file)) {
+      unlink($file);
+    }
+    return true;
     
   }
 
   static public function gc($lifetime) {
     
-    $time = time() - $lifetime;
-    
-    $dbc = Dbc::getInstance();
-    $dbc->prepare('delete from fm_session where timestamp < ?');
-    $dbc->bind_param($time);
-    $success = $dbc->execute();
+    foreach (glob(self::$savePath ."sess_*") as $file) {
+      if (filemtime($file) + $lifetime < time() && file_exists($file)) {
+        unlink($file);
+      }
+    }
 
-    $dbc->free();
-    
-    return $success;
+    return true;
     
   }
 
@@ -160,16 +118,7 @@ class Session implements ArrayAccess, Countable {
     
     $new_sid = self::generateId();
     
-    $dbc = Dbc::getInstance();
-    $dbc->prepare('update fm_session set sid=? where sid = ?');
-    $dbc->bind_param($new_sid);
-    $dbc->bind_param($old_sid);
-    $success = $dbc->execute();
-
-    $dbc->free();
-    
     return $success ? $new_sid : $old_sid;
-
   }
 
   static public function getId() {

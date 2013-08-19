@@ -21,7 +21,7 @@ if(!Session::isStarted())
 // cria um token de seguranca
 $token = $_SESSION[ SESSION_TOKEN_NAME ];
 if( empty($token) ) {
-  $_SESSION[ SESSION_TOKEN_NAME ] = md5(uniqid()).rand(5, 15).rand(0, 5);
+  $_SESSION[ SESSION_TOKEN_NAME ] = g_token();
 }
 
 //seta o sid global da sessao
@@ -37,6 +37,8 @@ if(isset($_SESSION['logged']) && $_SESSION['logged'] === true) {
   $_SESSION['logged'] = NULL;
   unset($_SESSION['logged']);
 }
+
+define('DJCK_TOKEN', $token);
 
 // clean mem
 unset($cookie_session, $cookie_sid, $sid, $token);

@@ -300,25 +300,21 @@ class Model extends ModelCommon {
     if ($this->permanentDelete !== true) {
       $where[] = _c(new SQLField(self::DEFAULT_DELETE_NAME), '=', '0');
     }
-    $where = new SQLExpression('AND', $where);
+    if ($where)
+      $where = new SQLExpression('AND', $where);
 
-    // cria o SQL
-    $ftotal = new SQLField('*');
-    $ftotal->setFunction('count');
-    $ftotal->setOver('order by 1');
-    $ftotal->setAlias('total');
-    
-    $instruction = new SQLISelect(array_merge($this->fields, array($ftotal)), $this->tables, $where);
+    $instruction = new SQLISelect($this->fields, $this->tables, $where);
     $sql = (string) $instruction;
     $bind_v = $instruction->getBinds();
     
+    $this->_to_dump($sql, $bind_v);
     //print_r(array( $sql, $bind_v));
 
     // prepara o sql
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($k, $bind_v[$k]);
+        $bd->bind_param($bind_v[$k]);
       }
 
       // executa a query
@@ -328,7 +324,7 @@ class Model extends ModelCommon {
           $row = $bd->fetch_assoc();
 
           // retira os campos internos
-          unset($row['TOTAL'], $row['R_N']);
+          //unset($row['TOTAL'], $row['R_N']);
           
           // salva os dados nos campos
           foreach ($row as $col => $val) {
@@ -367,12 +363,14 @@ class Model extends ModelCommon {
     
     $sql = (string) $instr;
     $bind_v = $instr->getBinds();
+    
+    $this->_to_dump($sql, $bind_v);
 
     // prepara o sql
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($k, $bind_v[$k]);
+        $bd->bind_param($bind_v[$k]);
       }
 
       // executa a query
@@ -416,13 +414,14 @@ class Model extends ModelCommon {
     }
 
     // cria o SQL
-    $instr_returning = new SQLIReturning($criteria_fields, $criteria_fields);
-    $instr = new SQLIInsert($this->_getFirstTable(), $this->_getNotNullFields(), $instr_returning);
+    //$instr_returning = new SQLIReturning($criteria_fields, $criteria_fields);
+    $instr = new SQLIInsert($this->_getFirstTable(), $this->_getNotNullFields());
 
     // pega as variaveis criadas do buildSQL
     $sql = (string) $instr;
-    $bind_v = SQLBase::getBinds();
+    $bind_v = $instr->getBinds();
     
+    $this->_to_dump($sql, $bind_v);
     //print_r(array( $sql, $bind_v));
 
     // prepara o sql
@@ -431,10 +430,10 @@ class Model extends ModelCommon {
         if (substr($k, 0, 6) === ':into_') {
           // se for into, jogar na var que pediu
           $k_field = substr($k, 6);
-          $bd->bind_param($k, $criteria_values[$k_field], 4000); // para valores out, deve-se garantir o espaço
+          $bd->bind_param($criteria_values[$k_field], 4000); // para valores out, deve-se garantir o espaço
         } else {
           // binda o valor
-          $bd->bind_param($k, $bind_v[$k]);
+          $bd->bind_param($bind_v[$k]);
         }
       }
 
@@ -508,6 +507,7 @@ class Model extends ModelCommon {
     $sql = (string)$instr;
     $bind_v = $instr->getBinds();
     
+    $this->_to_dump($sql, $bind_v);
     //print_r(array( $sql, $bind_v));
 
     // evita deletar toda a tabela (questoes de seguranca 12/03/2013)
@@ -519,7 +519,7 @@ class Model extends ModelCommon {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($k, $bind_v[$k]);
+        $bd->bind_param($bind_v[$k]);
       }
 
       // executa a query

@@ -14,6 +14,8 @@ if (!defined('APP_PATH'))
 if (!defined('PLUGIN_PATH'))
   define('PLUGIN_PATH', DJCK.DS.'plugins');
 
+class CoreException extends Exception {};
+
 /**
  * Description of Core
  *
@@ -62,7 +64,9 @@ abstract class Core {
     if (!empty($class) && is_file($parsed)) {
       // Register the class with the autoloader if not already registered or the force flag is set.
       if (empty(self::$classes[$class]) || $force) {
-        self::$classes[$class] = $parsed;
+        self::$classes[$class] = str_replace(DJCK, '#', $parsed); 
+        // replace serve para economizar espaço da memoria utilizado pela variavel
+        // estatica. não é necessario guardar o caminho inteiro
       }
     }
     
@@ -174,7 +178,7 @@ abstract class Core {
     // If the class is registered include the file.
     if (isset(self::$classes[$class])) {
       //echo self::$classes[$class];
-      include_once self::$classes[$class];
+      include_once str_replace('#', DJCK, self::$classes[$class]);
       return true;
     }
 
@@ -204,7 +208,7 @@ abstract class Core {
   static function dump() {
     global $Router;
     echo '<pre>';
-    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION));
+    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
     echo '</pre>';
   }
   
