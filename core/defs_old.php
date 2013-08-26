@@ -5,37 +5,25 @@
  * Titulo do site
  */
 if (!defined('SITE_TITLE'))
-  define('SITE_TITLE', 'CMS novo');
+  define('SITE_TITLE', 'Portal Reação Editora');
 
 /**
  * Subtitulo do site
  */
 if (!defined('SITE_SUBTITLE'))
-  define('SITE_SUBTITLE', 'Content Management System');
+  define('SITE_SUBTITLE', '');
 
 /**
  * Autor do site
  */
 if (!defined('SITE_OWNER'))
-  define('SITE_OWNER', 'FW Distrib');
+  define('SITE_OWNER', 'Raphael Hardt');
 
 /**
  * Copyright relacionado ao site
  */
 if (!defined('SITE_COPYRIGHT'))
-  define('SITE_COPYRIGHT', 'FW &copy;');
-
-/**
- * Keywords
- */
-if (!defined('SITE_KEYWORDS'))
-  define('SITE_KEYWORDS', 'teste,teste2,teste3');
-
-/**
- * Description
- */
-if (!defined('SITE_DESCRIPTION'))
-  define('SITE_DESCRIPTION', 'O site é esse.');
+  define('SITE_COPYRIGHT', 'Reação Editora - Creative Commons (BY-NC-ND) 3.0');
 
 /**
  * Raiz de onde o site roda (path relativo ao DOC_ROOT configurado pelo server)

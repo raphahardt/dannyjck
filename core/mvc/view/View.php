@@ -12,11 +12,12 @@ abstract class View extends Smarty {
   // pagina que será exibida
   private $view = array();
   private $breadcrumbs = array();
+  private $icons = array();
   private $title = '';
   private $vars = array();
   private $js_vars = array();
   
-  public function __construct($view) {
+  public function __construct($view, $ajax = false) {
     // inicia o smarty normalmente
     parent::__construct();
 
@@ -33,14 +34,17 @@ abstract class View extends Smarty {
     // definicoes principais
     $this->assign('site', array(
         'title' => SITE_TITLE,
+        'subtitle' => SITE_SUBTITLE,
         'copyright' => SITE_COPYRIGHT,
         'description' => SITE_DESCRIPTION,
         'keywords' => SITE_KEYWORDS,
         'owner' => SITE_OWNER,
         'URL' => SITE_URL,
         'fullURL' => SITE_FULL_URL,
+        'domain' => SITE_DOMAIN,
         
-        'token' => DJCK_TOKEN,
+        'charset' => SITE_CHARSET,
+        
     ));
     
     // compile the main css
@@ -49,11 +53,13 @@ abstract class View extends Smarty {
       "siteURL" => '"'.DJCK_SITE_URL.'"'
     ));
     $less->checkedCompile( DJCK_BASE . 'www'.DS.'css'.DS. 'main.less', DJCK_BASE . 'www'.DS.'css'.DS.'main.css');*/
+    $this->addIcon(SITE_URL.'/favicon.ico', 'icon');
+    
     $this->addBreadcrumb('Pagina inicial', '');
     
-    $this->view = array(
-        'template.tpl'
-    );
+    $this->view = array();
+    $this->view[] = $ajax ? 'skin_ajax.tpl' : 'skin.tpl';
+    $this->view[] = 'template.tpl';
 
     // pasta padrao que o smarty vai buscar as paginas
     $this->view[] = $view;
@@ -67,7 +73,7 @@ abstract class View extends Smarty {
     return true;
   }
   
-  protected function render($supress_header = false) {
+  public function render() {
 
     try {
       
@@ -78,23 +84,20 @@ abstract class View extends Smarty {
       }
       
       // define variaveis
-      $this->assign('view', 
-        array_merge(
-          array( 'title' => $this->title ),
-          $this->vars
-        )
-      ); //titulo
+      $vars = (array)$this->vars;
+      if ($this->title) $vars['title'] = $this->title;
       
       if (!empty($this->js_vars) && is_array($this->js_vars)) { // vars javascript
-        $this->assign('varsjs', $this->js_vars);
+        $vars['js_vars'] = $this->js_vars;
       }
-      if (is_array($this->breadcrumbs) && count($this->breadcrumbs) > 1) { //breadcrumb
-        $bread = array();
-        foreach ($this->breadcrumbs as $t => $b) {
-          $bread[] = array('title' => $t, 'url' => $b);
-        }
-        $this->assign('breadcrumb', $bread);
+      if (is_array($this->breadcrumbs) && count($this->breadcrumbs) > 1) {
+        $vars['breadcrumb'] = $this->breadcrumbs;
       }
+      
+      $vars['icons'] = $this->icons;
+      
+      // vars
+      $this->assign('view', $vars);
 
       // mostra o conteudo da pagina
       if (count($this->view) > 1)
@@ -108,14 +111,37 @@ abstract class View extends Smarty {
   }
   
   protected function addBreadcrumb($title, $url) {
-    $this->breadcrumbs[$title] = $url;
+    $this->breadcrumbs[] = array(
+        'title' => $title,
+        'url' => $url,
+    );
   }
   
-  protected function setVar($title, $url) {
-    $this->vars[$title] = $url;
+  protected function addIcon($file, $type, $sizes = null) {
+    $this->icons[] = array(
+        'file' => $file,
+        'sizes' => $sizes, 
+        'type' => $type,
+    );
   }
   
-  protected function getVar($title) {
+  public function addJSVar($var, $value) {
+    if (is_string($value)) {
+      $value = "'$value'";
+    } elseif (is_array($value)) {
+      $value = json($value);
+    }
+    $this->js_vars[] = array(
+        'name' => $var,
+        'value' => $value,
+    );
+  }
+
+  public function setVar($title, $val) {
+    $this->vars[$title] = $val;
+  }
+  
+  public function getVar($title) {
     return $this->vars[$title];
   }
   

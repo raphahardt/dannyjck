@@ -10,7 +10,16 @@ Core::uses('AppController', 'controller');
 class HomeController extends AppController {
   
   function index() {
-    echo base64_encode('fastmotors').'<br>';
+    
+    Core::uses('AppView', 'view');
+    $view = new AppView('home/index.tpl');
+    $view->addJSVar('teste', '123ação');
+    $view->addJSVar('teste2', 123);
+    $view->addJSVar('teste3', array('a', 'b', 3, null, 'ação'));
+    $view->addJSVar('teste4', array('teste'=>'a', 'b', 3, null, 'ção'));
+    $view->render();
+    
+    /*echo SITE_DOMAIN;
     echo $this->request->referer().'<br>';
     echo 'index';
     //echo '<img src="imagem.jpg" />';
@@ -27,7 +36,7 @@ class HomeController extends AppController {
     $s->select();
     var_dump($s['sid']);
     
-    echo '</pre>';
+    echo '</pre>';*/
   }
   
   function favicon() {
