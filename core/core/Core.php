@@ -53,7 +53,7 @@ abstract class Core {
   );
   
   // registra a classe que vc vai usar no contexto para ser carregada pelo autoload
-  static function uses($class, $path, $force = false) {
+  final static function uses($class, $path, $force = false) {
     // pega pasta correta
     $parsed = self::_parseFile($class, $path);
     
@@ -74,7 +74,7 @@ abstract class Core {
   }
   
   // retorna o caminho correto
-  static function path($path) {
+  final static function path($path) {
     
     $parts = explode('/', $path);
     $type = array_shift($parts);
@@ -128,7 +128,7 @@ abstract class Core {
     return $abs_path;
   }
   
-  static function import($file, $path, $force = false) {
+  final static function import($file, $path, $force = false) {
     $success = false;
     
     $alias = '';
@@ -164,7 +164,7 @@ abstract class Core {
   }
   
   // carrega uma classe
-  public static function load($class) {
+  final public static function load($class) {
     // Sanitize class name.
     $class = strtolower($class);
     
@@ -186,7 +186,7 @@ abstract class Core {
   }
   
   // verifica se a classe já foi carregada, se não, lançar uma exception
-  static function depends($class) {
+  final static function depends($class) {
     ++self::$calls;
     
     // If the class already exists do nothing.
@@ -197,18 +197,19 @@ abstract class Core {
   }
   
   // alias para ::uses
-  static function register($class, $path, $force = false) {
+  final static function register($class, $path, $force = false) {
     self::uses($class, $path, $force);
   }
   
-  static function setup() {
+  final static function setup() {
     spl_autoload_register(array('Core', 'load'));
   }
   
   static function dump() {
     global $Router;
     echo '<pre>';
-    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
+    //print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
+    print_r(array($_SESSION, $_COOKIE));
     echo '</pre>';
   }
   

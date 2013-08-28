@@ -178,6 +178,15 @@ class Router {
 
       $class->request->addParams($params);
       $class->response->statusCode($response_code);
+      
+      // alguns headers padrões
+      if (defined('SITE_CHARSET')) {
+        $class->response->charset(SITE_CHARSET);
+      }
+      
+      if (defined('SITE_OFFLINE') && SITE_OFFLINE === true) {
+        $class->response->header('X-Robots-Tag', 'noindex, nofollow');
+      }
 
       // verifica se existe ação ou se o controller é NotFound
       if (!empty($action) && $url_id != 'error') {

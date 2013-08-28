@@ -6,3 +6,6 @@
  * 
  * Para registrar controllers, utilize o APP/cfg/controllers.php
  */
+
+Core::register('HomeController', 'controller/home');
+Core::register('ErrorController', 'controller/home');

@@ -57,6 +57,12 @@ abstract class View extends Smarty {
     
     $this->addBreadcrumb('Pagina inicial', '');
     
+    // variaveis relativas a cookie
+    $this->addJSVar('C', array(
+        'd'=>COOKIE_DOMAIN, // domain
+        'p'=>COOKIE_PATH // path
+    ));
+    
     $this->view = array();
     $this->view[] = $ajax ? 'skin_ajax.tpl' : 'skin.tpl';
     $this->view[] = 'template.tpl';

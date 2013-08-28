@@ -2,7 +2,7 @@
 
 define('DJCK_DB_SCHEMA', base64_decode('ZmFzdG1vdG9ycw=='));
 define('DJCK_DB_USER', 'root');
-define('_DJCK_DB_PASSWORD', 'lkglby90');
+define('_DJCK_DB_PASSWORD', '');
 define('DJCK_DB_HOST', 'localhost');
 
 class DbcException extends Exception {};

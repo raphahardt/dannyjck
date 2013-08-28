@@ -128,7 +128,7 @@ if (!function_exists('g_sessionid')) {
    * @return string
    */
   function g_sessionid() {
-    return sprintf('%d-%s-%u-%d', mt_rand(0,9), md5(uniqid()), ip2long(env('REMOTE_ADDR')), mt_rand(0, 5));
+    return sprintf('%d-%s%s%u-%d', mt_rand(0,9), md5(env('HTTP_USER_AGENT')), md5(uniqid()), ip2long(env('REMOTE_ADDR')), mt_rand(0, 5));
   }
   
 }

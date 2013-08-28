@@ -2,7 +2,7 @@
 {block 'page.contents'}
   {literal}
   <div ng-controller="HomeCtrl">
-    <p>{{itens.length}} itens encontrados</p>
+    <p>{{c}} itens encontrados</p>
     <ul>
       <li ng-repeat="item in itens">
         <img ng-src="{{item.img}}" width="50" />
@@ -10,25 +10,70 @@
         <span>{{item.nome}}</span>
       </li>
     </ul>
-    <a href="#" ng-click="addA()">add</a>
+    <a href="#" ng-click="addItem()">adicionar</a>
+    <button onclick="a(teste, teste2)">teste</button>
+    <div style="border:1px solid #ccc;">{{idle}}</div>
   </div>
+  <div class="well" id="status">ok</div>
   {/literal}
 {/block}
 {block 'ad.728'}{/block}
 {block 'page.js' append}
+  <script src="{$site.URL}/public/js/helpers/idle.js"></script>
   <script>
-    function HomeCtrl($scope) {
-      $scope.itens = [
-        { img: '123.jpg', nome: 'Teste1', checked:true },
-        { img: '123.jpg', nome: 'Teste2', checked:true },
-        { img: '123.jpg', nome: 'Teste3', checked:false },
-        { img: '123.jpg', nome: 'Teste4', checked:true },
-        { img: '123.jpg', nome: 'Teste5', checked:false }
-      ];
+    /*document.onBack = function () {
+      $('#status').text('ok ');
+      var scope = angular.element($('html')[0]).scope();
+      scope.status = 'fsdfsd';
+    }
+    document.onIdle = function () {
+      $('#status').text('idle ');
+      teste = 'idle';
+    }
+    document.onAway = function () {
+      $('#status').text('away ');
+      teste = 'away';
+    }*/
+    
+    function a() {
+      console.log(arguments);
+    }
+    
+    function HomeCtrl($scope, $timeout, $http, $window) {
       
-      $scope.addA = function () {
-        $scope.itens.push({ img: '123.jpg', nome: 'Teste1', checked:true });
-      }
+      $http({ method: 'GET', url: 'teste.json'}).
+        success(function(data, status, headers, config) {
+        // this callback will be called asynchronously
+        // when the response is available
+          $scope.itens = data;
+          $scope.c = data.length;
+        }).
+        error(function(data, status, headers, config) {
+        // called asynchronously if an error occurs
+        // or server returns response with an error status.
+      });
+      
+      $scope.addItem = function () {
+          /*$timeout(function () {
+            //$scope.itens = [];
+            $scope.itens.push({ img: '123.jpg', nome: 'Teste'+($scope.c++), checked:$scope.c % 2 == 0 });
+          }, 1000);*/
+          $http({ method: 'GET', url: 'teste.json'}).
+            success(function(data, status, headers, config) {
+            // this callback will be called asynchronously
+            // when the response is available
+              angular.forEach(data, function (val, key) {
+                this.push(val);
+              }, $scope.itens);
+              $scope.c += data.length;
+            }).
+            error(function(data, status, headers, config) {
+            // called asynchronously if an error occurs
+            // or server returns response with an error status.
+          });
+      };
+      
+      $window.idleStatus = $scope.idle;
     }
   </script>
 {/block}

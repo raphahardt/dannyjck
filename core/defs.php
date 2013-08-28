@@ -1,4 +1,7 @@
 <?php
+
+date_default_timezone_set('America/Sao_Paulo');
+
 // SITE --------------------------------------------------------------
 
 /**
@@ -122,4 +125,19 @@ if (!defined('SESSION_TOKEN_NAME'))
  */
 if (!defined('SESSION_USER_NAME'))
   define('SESSION_USER_NAME', 'user');
+
+
+// COOKIES --------------------------------------------------------------------------
+
+/**
+ * Dominio onde os cookies serão gravados
+ */
+if (!defined('COOKIE_DOMAIN'))
+  define('COOKIE_DOMAIN', SITE_DOMAIN);
+
+/**
+ * Pasta onde os cookies serão gravados
+ */
+if (!defined('COOKIE_PATH'))
+  define('COOKIE_PATH', '/');
 

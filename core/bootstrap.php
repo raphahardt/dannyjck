@@ -37,8 +37,6 @@ if (!defined('TEMP_PATH'))
 
 define('OS', PHP_OS);
 
-date_default_timezone_set('America/Sao_Paulo');
-
 // funções basicas
 include CORE_PATH.DS.'basics.php';
 

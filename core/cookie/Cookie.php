@@ -64,7 +64,12 @@ class Cookie {
 
   public function set($value) {
     
+    if (headers_sent()) {
+      throw new Exception('Headers already been sent');
+    }
+    
     $this->rawvalue = $value;
+    $time = time() - 3600;
     
     if (is_array($value)) {
       
@@ -120,7 +125,7 @@ class Cookie {
   }
 
   public function delete() {
-    $time = time() - 10;
+    $time = time() - 3600;
     if (is_array($this->value)) {
 
       foreach ($this->value as $index => $v) {

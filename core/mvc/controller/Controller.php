@@ -15,15 +15,16 @@ abstract class Controller {
   protected $user;
   
   public function __construct() {
-    $this->session = new Session();
+    //$this->session = new Session();
+    $this->session = &$_SESSION;
    
     $this->request = new Request();
     $this->response = new Response();
     
     $this->ip = $this->request->clientIp();
-    $this->user = $_SESSION['user'];
+    $this->user = $_SESSION[SESSION_USER_NAME];
     $this->logged = is_object($this->user) && $this->user->id > 0;
-    $this->token = $_SESSION['token'];
+    $this->token = $_SESSION[SESSION_TOKEN_NAME];
   }
   
   public function beforeExecute() {
