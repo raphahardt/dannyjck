@@ -1,4 +1,4 @@
 dannyjck
 ========
 
-Lighgweight and simple framework for PHP5
+Lightweight and simple framework for PHP5

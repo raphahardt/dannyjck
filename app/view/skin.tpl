@@ -5,18 +5,15 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="pt-BR" ng-app> <!--<![endif]-->
   <head>
     <meta charset="{$site.charset}">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
     {block 'site.head'}{/block}
   </head>
   <body>
-    <!--[if lt IE 7]>
-        <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
-    <![endif]-->
+    <div id="fw-wrap">
     {block 'site.header'}{/block}
     {block 'site.body'}{/block}
     {block 'site.footer'}{/block}
+    </div>
     {block 'site.js'}{/block}
   </body>
 </html>

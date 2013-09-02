@@ -1,5 +1,7 @@
 <?php
 
+Core::depends('View');
+
 /**
  * Description of AppView
  *
@@ -11,13 +13,13 @@ class AppView extends View {
     
     
     // facebook
-    $this->setVar('facebook_id', 'fdsf');
+    $this->setVar('facebook_id', '123292314484308');
     
     // define os icones padroes
+    /*$this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');
     $this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');
     $this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');
-    $this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');
-    $this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');
+    $this->addIcon(SITE_URL.'/images/icon144.png', 'apple-touch-icon-precomposed', '144x144');*/
     
     parent::__construct($view, $ajax);
   }

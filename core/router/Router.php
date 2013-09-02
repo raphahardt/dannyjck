@@ -2,7 +2,7 @@
 
 Core::uses('Controller', 'core/mvc/controller');
 
-class RouterException extends Exception {}
+class RouterException extends CoreException {}
 
 /**
  * Description of Router
@@ -155,6 +155,7 @@ class Router {
         
         $path = $this->connected_routes[$url]['path'];
       }
+      unset($url, $method, $class);
     }
 
     // pega a ação e o controller a ser usado
@@ -162,7 +163,7 @@ class Router {
       list($class_name, $action) = each($controller);
 
     //acerto o path do meu view
-    $dir = $path;
+    //$dir = $path;
 
     if (is_null($action) && !empty($params) && isset($params[0])) {
       //extrai a 'acao'
@@ -170,11 +171,12 @@ class Router {
     }
     
     // controla o buffer
+    ob_end_clean(); // limpa qualquer coisa que vier de outro redirecionamento
     ob_start();
 
     // verifica se a classe existe
     if (class_exists($class_name)) {
-      $class = new $class_name($dir);
+      $class = new $class_name($this->url);
 
       $class->request->addParams($params);
       $class->response->statusCode($response_code);
@@ -187,25 +189,33 @@ class Router {
       if (defined('SITE_OFFLINE') && SITE_OFFLINE === true) {
         $class->response->header('X-Robots-Tag', 'noindex, nofollow');
       }
+      
+      // before
+      if ($class->beforeExecute() !== false) {
+      
+        // verifica se existe ação ou se o controller é NotFound
+        if (!empty($action) && $url_id != 'error') {
+          if (method_exists($class_name, $action)) {
+            $class->$action();
+          } else {
+            //$class->response->statusCode(404);
+            $this->route('error', null, 404);
+            return;
+          }
+        } else {
+          // checa e instancia o método index da classe
+          if (method_exists($class_name, 'index')) {
+            $class->index();
+          } else {
+            //$class->response->statusCode(404);
+            $this->route('error', null, 404);
+            return;
+          }
+        }
 
-      // verifica se existe ação ou se o controller é NotFound
-      if (!empty($action) && $url_id != 'error') {
-        if (method_exists($class_name, $action)) {
-          $class->$action();
-        } else {
-          //$class->response->statusCode(404);
-          $this->route('error', null, 404);
-          return;
-        }
-      } else {
-        // checa e instancia o método index da classe
-        if (method_exists($class_name, 'index')) {
-          $class->index();
-        } else {
-          //$class->response->statusCode(404);
-          $this->route('error', null, 404);
-          return;
-        }
+        // after
+        $class->afterExecute();
+        
       }
       
       // pega o conteudo do buffer

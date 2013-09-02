@@ -12,14 +12,13 @@
  * @license       http://www.opensource.org/licenses/mit-license.php MIT License
  */
 
-define('DEFS_ONLY', true);
-
 define('DS', DIRECTORY_SEPARATOR);
 
-define('DJCK', dirname(__FILE__));
-define('CORE_PATH', dirname(DJCK).DS.'core');
-define('PLUGIN_PATH', dirname(DJCK).DS.'plugins');
+define('ROOT', dirname(__FILE__));
+define('CORE_PATH', dirname(ROOT).DS.'core');
 
 require CORE_PATH.DS.'bootstrap.php';
 
-dump();
+// inicia a rota
+if (isset($Router))
+  $Router->dispatch($_GET['q']);

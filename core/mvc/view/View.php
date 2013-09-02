@@ -24,12 +24,21 @@ abstract class View extends Smarty {
     // define os padrões
     $this->debugging = false;
     $this->caching = false;
-    $this->cache_lifetime = 120;
+    $this->cache_lifetime = 5;
 
-    $this->setTemplateDir(APP_PATH .DS. 'view');
+    $this->setTemplateDir(array(
+        APP_PATH .DS. 'view',
+        DJCK . DS. 'public' .DS. 'tmpl'.DS.'components',
+        ROOT . DS. 'public' .DS. 'tmpl'.DS.'components',
+    ));
     $this->setCompileDir(TEMP_PATH .DS.'smarty'.DS. 'templates_c');
     $this->setCacheDir(TEMP_PATH .DS.'smarty'.DS. 'cache');
     $this->setConfigDir(PLUGIN_PATH.DS.'smarty'.DS. 'config');
+    $this->setPluginsDir(array(
+        PLUGIN_PATH.DS.'smarty'.DS. 'plugins'
+        // TODO: colocar uma pasta só para os novos plugins pro smarty (ou não, continuar
+        // deixando eles na pasta plugins dentro da pasta plugins/smarty
+    ));
     
     // definicoes principais
     $this->assign('site', array(
@@ -47,14 +56,10 @@ abstract class View extends Smarty {
         
     ));
     
-    // compile the main css
-    /*$less = new lessc();
-    $less->setVariables(array(
-      "siteURL" => '"'.DJCK_SITE_URL.'"'
-    ));
-    $less->checkedCompile( DJCK_BASE . 'www'.DS.'css'.DS. 'main.less', DJCK_BASE . 'www'.DS.'css'.DS.'main.css');*/
+    // favicon
     $this->addIcon(SITE_URL.'/favicon.ico', 'icon');
     
+    // breadcrumb inicial
     $this->addBreadcrumb('Pagina inicial', '');
     
     // variaveis relativas a cookie
@@ -62,6 +67,12 @@ abstract class View extends Smarty {
         'd'=>COOKIE_DOMAIN, // domain
         'p'=>COOKIE_PATH // path
     ));
+    
+    // token
+    if (defined('TOKEN')) {
+      $this->addJSVar('T', TOKEN);
+      $this->setVar('token', TOKEN);
+    }
     
     $this->view = array();
     $this->view[] = $ajax ? 'skin_ajax.tpl' : 'skin.tpl';
@@ -104,6 +115,9 @@ abstract class View extends Smarty {
       
       // vars
       $this->assign('view', $vars);
+      
+      // mostra pagina compilada
+      $this->loadFilter('output', 'trimwhitespace');
 
       // mostra o conteudo da pagina
       if (count($this->view) > 1)
@@ -131,8 +145,14 @@ abstract class View extends Smarty {
     );
   }
   
-  public function addJSVar($var, $value) {
-    if (is_string($value)) {
+  /**
+   * Define uma variavel global para ser usada no Javascript da página
+   * @param string $var Nome da variável
+   * @param mixed $value Valor da variável, já formatada no padrão JS
+   * @param boolean $raw Se TRUE, irá imprimir o valor "como ele está", sem formatação
+   */
+  public function addJSVar($var, $value, $raw = false) {
+    if (is_string($value) && !$raw) {
       $value = "'$value'";
     } elseif (is_array($value)) {
       $value = json($value);

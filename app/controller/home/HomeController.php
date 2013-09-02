@@ -11,43 +11,51 @@ class HomeController extends AppController {
   
   function index() {
     
-    Core::dump();
-    echo '<pre style="background:#fcc; padding:20px;">';
-    foreach(glob('C:\\session\\*') as $f) {
-      echo $f.'<br>';
-    }
-    echo '</pre>';
+    $partners = array();
+    $partners[] = array(
+        'title' => 'Conexão Nanquim',
+        'description' => 'Almanaque digital de histórias em quadrinhos publicado desde março de 2012. Neste 1 ano e meio de publicação, mais de 40 títulos passaram pela revista, desde séries a histórias fechadas, abrindo a oportunidade para novos quadrinistas publicarem seus trabalhos.',
+        'image' => SITE_URL. '/public/img/p-cn.png',
+        'background_color' => '#e31c1d',
+        'site' => 'www.conexaonanquim.com.br',
+    );
     
-    //Core::uses('AppView', 'view');
-    /*$view = new AppView('home/index.tpl');
-    $view->addJSVar('teste', '123ação');
-    $view->addJSVar('teste2', 123);
-    $view->addJSVar('teste3', array('a', 'b', 3, null, 'ação'));
-    $view->addJSVar('teste4', array('teste'=>'a', 'b', 3, null, 'ção'));
-    $view->render();*/
+    $partners[] = array(
+        'title' => 'Mangá Pride',
+        'description' => 'Uma revista sobre o universo otaku em geral. Você encontrará materias sobre games, animes, mangás e muito mais, tudo isso em linguagem simples e muito fácil de entender. Seja bem vindo ao mundo Mangá Pride!',
+        'image' => SITE_URL. '/public/img/p-mp.png',
+        'background_color' => '#faf4f4',
+        'site' => 'www.mangapride.com.br',
+    );
+    $partners[] = array(
+        'title' => 'Zinext',
+        'description' => 'A Zinext é um movimento de quadrinho alternativo que surgiu em 2006 como o nosso e que pública revistas alternativas sempre procurando apresentar novas histórias e perspectivas sobre o mundo dos quadrinhos.',
+        'image' => SITE_URL. '/public/img/p-zinext.png',
+        'background_color' => '#431e74',
+        'site' => 'revistazinext.wix.com/zinext',
+    );
     
-    /*echo SITE_DOMAIN;
-    echo $this->request->referer().'<br>';
-    echo 'index';
-    //echo '<img src="imagem.jpg" />';
-    echo '<a href="add/">add</a>';
-    $this->session['teste'] = 'aaa';
-    echo '<pre style="background:#ddd">';
-    //var_dump($this->session['teste']);
+    $partners[] = array(
+        'title' => 'Art Here',
+        'description' => 'No blog você encontrará o melhor conteúdo em games, animação, quadrinhos e arte em geral. Além de notícias e lançamentos, você também encontrará materiais ensinando diversas técnicas usadas por profissionais do mundo todo para ajudar no seu aprendizado.',
+        'image' => SITE_URL. '/public/img/p-arthere.png',
+        'background_color' => '#bf7a0c',
+        'site' => 'www.artehere.com',
+    );
     
-    Core::uses('SessionModel', 'model/session');
+    Core::uses('AppView', 'view');
     
-    $s = new SessionModel();
-    //$s->setFilterValues('0-d19e796e25333eae1b58258bfa5c4ef7-2130706433-5');
-    //$s->setFilterValues('gnfudignfduigd');
-    $s->select();
-    var_dump($s['sid']);
+    $view = new AppView('home/index.tpl');
     
-    echo '</pre>';*/
+    // variables
+    $view->assign('partners', $partners);
+    
+    $view->render();
+    
   }
   
   function favicon() {
-    $favicon = DJCK.DS.'favicon.ico';
+    $favicon = ROOT.DS.'favicon.ico';
     
     $this->response->cache(filemtime($favicon), '+4 years');
     $this->response->type('ico');
@@ -57,22 +65,6 @@ class HomeController extends AppController {
       readfile($favicon);
     }
   }
-  
-  function add() {
-    //$this->response->cache(mktime(0,0,0, 6, 8, 2013), time()+5);
-    //$this->response->checkNotModified($this->request);
-    echo $this->request->referer().'<br>';
-    echo '<a href="../">home</a>';
-    echo env('HTTP_REFERER').'<br>';
-    echo '<img src="../imagem.jpg" />';
-    echo 'add22';
-  }
-  
-  function edit() {
-    echo 'edit #'.$this->request->params[':id'];
-    print_r($this->request->params);
-  }
-  
   
   function imagem() {
     

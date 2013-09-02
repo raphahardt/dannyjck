@@ -208,8 +208,8 @@ abstract class Core {
   static function dump() {
     global $Router;
     echo '<pre>';
-    //print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
-    print_r(array($_SESSION, $_COOKIE));
+    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
+    //print_r(array($_SESSION, $_COOKIE));
     echo '</pre>';
   }
   

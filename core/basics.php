@@ -121,14 +121,66 @@ if (!function_exists('g_token')) {
   
 }
 
-if (!function_exists('g_sessionid')) {
+if (!function_exists('fmt_value')) {
   
   /**
-   * Gera uma string token unica
-   * @return string
+   * Formata um valor com um sufixo quando o número encontra o numero de casas decimais
+   * definidas em $suffix
+   * Exemplos: 1 200 = 1,2 mil
+   *           20 413 000 = 20,4 milhões
+   * @param type $value Valor a ser formatado
+   * @param type $base Base númerica do valor a ser formatado. Padrão é 1000
+   * @param type $decimals Quantas casas decimais mostrar após a virgula. Padrão é 1
+   * @param type $suffix O que mostrar após o número quando encontrar o log() do valor na
+   *                     $base definida. Deve ser um array onde o key é o log() desejado
+   *                     e o valor pode ser uma string ou um array com dois valores (um
+   *                     para a escrita no singular e outro para escrita no plural)
    */
-  function g_sessionid() {
-    return sprintf('%d-%s%s%u-%d', mt_rand(0,9), md5(env('HTTP_USER_AGENT')), md5(uniqid()), ip2long(env('REMOTE_ADDR')), mt_rand(0, 5));
+  function fmt_value($value, $base=1000, $decimals=1, $suffix=array(
+      1=>'mil',
+      2=>array('milhão','milhões'),
+      3=>array('bilhão','bilhões')) ) {
+    $key = floor(log($value, $base)); // pega o log que vai ser o key dos sufixos
+    $num = $value / (pow($base, $key)); // cria o numero que vai ser o valor a ser mostrado
+    $suf = (is_array($suffix[$key])) ? 
+             ((int)$num != 1 ? $suffix[$key][1] : $suffix[$key][0]) :
+             $suffix[$key];
+    
+    $num_fmted = round($num, $decimals);
+    
+    return "$num_fmted $suf";
+  }
+  
+  /**
+   * Formata um valor em sufixo em bytes
+   * Exemplo: 1024 = 1 KB
+   * @param type $value Valor a ser formatado
+   * @return string String com valor formatado, com sufixo (B,KB,MB,GB,TB)
+   */
+  function fmt_bytes($value) {
+    return fmt_value($value, 1024, 3, array(
+       0=>'B',
+       1=>'KB',
+       2=>'MB',
+       3=>'GB',
+       4=>'TB',
+    ));
+  }
+  
+  /**
+   * Formata um valor em sufixo em bibytes
+   * Exemplo: 1024 = 1 KiB
+   * @param type $value Valor a ser formatado
+   * @return string String com valor formatado, com sufixo (B,KiB,MiB,GiB,TiB)
+   */
+  function fmt_bibytes($value) {
+    return fmt_value($value, 1024, 3, array(
+       0=>'B',
+       1=>'KiB',
+       2=>'MiB',
+       3=>'GiB',
+       4=>'TiB',
+    ));
   }
   
 }

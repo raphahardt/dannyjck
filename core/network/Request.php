@@ -331,7 +331,7 @@ class Request {
         return $ref;
       }
     }
-    return '/';
+    return '';
   }
 
   /**
@@ -347,7 +347,7 @@ class Request {
       $type = strtolower(substr($name, 2));
       return $this->is($type);
     }
-    throw new AppException('Método '.$name.' não existe');
+    throw new CoreException('Método '.$name.' não existe');
   }
 
   /**

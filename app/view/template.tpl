@@ -1,10 +1,10 @@
 {block 'site.head'}
   <title>{block 'page.title'}{$site.title}{/block}</title>
 
-  <meta name="author" content="{$site.owner}" />
-  <meta name="copyright" content="{$site.copyright}" />
-  <meta name="keywords" content="{$site.keywords}" />
-  <meta name="description" content="{block 'page.description'}{$site.description}{/block}" />
+  <meta name="author" content="{$site.owner}"/>
+  <meta name="copyright" content="{$site.copyright}"/>
+  <meta name="keywords" content="{$site.keywords}"/>
+  <meta name="description" content="{block 'page.description'}{$site.description}{/block}"/>
 
   {block 'page.facebook_headers'}
   <meta property="og:title" content="{block 'page.title'}{$site.title}{/block}"/>
@@ -13,7 +13,6 @@
   <meta property="og:site_name" content="{$site.title}"/>
   <meta property="og:description" content="{block 'page.description'}{$site.description}{/block}"/>
   {/block}
-  <meta property="fb:app_id" content="{$view.facebook_id}" />
 
   {block 'page.icons'}
     {foreach $view.icons as $icon}
@@ -27,12 +26,14 @@
     {/foreach}
   {/block}
 
-  <link href='//fonts.googleapis.com/css?family=Coming+Soon|Architects+Daughter|Gochi+Hand' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" type="text/css" href="{$site.fullURL}www/css/font-awesome.css">
-  <link rel="stylesheet" type="text/css" href="{$site.fullURL}min/?g=styles">
-  <link rel="stylesheet" type="text/css" href="{$site.fullURL}www/css/main.css">
-
-  <script src="{$site.fullURL}min/?g=essentials"></script>
+  <!-- CSS -->
+  <link href='http://fonts.googleapis.com/css?family=Armata' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="{$site.URL}/min/?g=css" type="text/css">
+  <!--[if lte IE 7]>
+  <link rel="stylesheet" href="{$site.URL}/min/?g=css_ie7" type="text/css">
+  <![endif]-->
+  <!-- Modernizr -->
+  <script src="{$site.URL}/min/?g=essentials"></script>
   {if $view.js_vars}
   <script>
     {foreach $view.js_vars as $var}{if $var@first}var {$var.name}={$var.value}{else},{$var.name}={$var.value}{/if}{/foreach}
@@ -40,14 +41,14 @@
   {/if}
 
   <!-- Analytics -->
-  <script>var _gaq=[['_setAccount','{$site.ga}'],['_setDomainName', '{$site.domain}'],['_setAllowLinker', true],['_trackPageview']];(function(d){ var g=d.createElement('script'),s=d.scripts[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document))</script>
+  <script>var _gaq=[['_setAccount','{$view.ga}'],['_setDomainName', '{$site.domain}'],['_setAllowLinker', true],['_trackPageview']];(function(d){ var g=d.createElement('script'),s=d.scripts[0];g.src='//www.google-analytics.com/ga.js';s.parentNode.insertBefore(g,s)}(document))</script>
 {/block}
 {block 'site.header'}
   <div id="fb-root"></div>
   {block 'page.header'}
-  <header class="cn-header">
-    <div class="container cn-headerbg cn-headerbg1">
-      <hgroup>
+  <header class="re-header">
+    <div class="container">
+      <hgroup class="re-logo">
         <h1><a href="{$site.fullURL}">{$site.title}</a></h1>
         <h2>{$site.subtitle}</h2>
       </hgroup>
@@ -68,15 +69,6 @@
       </div>
       {/block}
     </div>
-    <nav class="cn-menu">
-      <div class="container">
-        <ul>
-          <li><a href="{$site.fullURL}/menu1">Menu1</a></li>
-          <li><a href="{$site.fullURL}/menu2">Menu2</a></li>
-          <li><a href="{$site.fullURL}/menu3">Menu3</a></li>
-        </ul>
-      </div>
-    </nav>
   </header>
   {/block}
   
@@ -88,7 +80,7 @@
           {if $bread@last}
             <li class="active">{$bread.title}</li>
           {else}
-            <li><a href="{$site.fullURL}/{$bread.url}">{$bread.title}</a> <span class="divider">/</span></li>
+            <li><a href="{$site.URL}/{$bread.url}">{$bread.title}</a> <span class="divider">/</span></li>
           {/if}
         {/foreach}
         </ul>
@@ -109,7 +101,7 @@
       {foreach $footerSeries as $serie}
         <li>
           <a href="{$site.URL}series/{$serie.key}">
-            <img src="{$site.URL}images/series/{$serie.keyImage}/arq.jpg" />
+            <img src="{$site.URL}images/series/{$serie.keyImage}/arq.jpg"/>
             <span class="cn-legend">{$serie.nome}</span>
           </a>
         </li>
@@ -144,8 +136,10 @@
   {block 'page.js'}
   <!-- Ta aí o que faz o negocio todo funcionar.. -->
   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-  <script src="{$site.fullURL}min/?g=core"></script>
-  <script src="{$site.fullURL}min/?g=plugins"></script>
+  <script src="{$site.URL}/min/?g=core"></script>
+  <script>$.cookie.defaults={ domain:C.d,path:C.p}</script>
+  {*<script src="{$site.fullURL}min/?g=core"></script>
+  <script src="{$site.fullURL}min/?g=plugins"></script>*}
   <!-- Iniciando os plugins de redes sociais -->
   <script>
     $(function(){ var t=true,_o={ dataType:'script',cache:t};
@@ -158,12 +152,5 @@
       _o.url='//connect.facebook.net/pt_BR/all.js';_o.success=function(){ FB.init({ appId:'{$view.facebook_id}',channelUrl:'{$site.fullURL}/www/channel.html',cookie:t,status:t,xfbml:t})};$.ajax(_o);
     });
   </script>
-  {foreach $js as $j}
-    {if $j.group}
-      <script src="{$site.URL}min/?g={$j.file}"></script>
-    {else}
-      <script src="{$site.URL}min/?b=js&amp;f={$j.file}"></script>
-    {/if}
-  {/foreach}
   {/block}
 {/block}

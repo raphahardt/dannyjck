@@ -552,7 +552,7 @@ class Response {
       return $this->_status;
     }
     if (!isset($this->_statusCodes[$code])) {
-      throw new AppException('Unknown status code');
+      throw new CoreException('Status code desconhecido');
     }
     return $this->_status = $code;
   }
@@ -1010,6 +1010,16 @@ class Response {
    */
   public function download($filename) {
     $this->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+  }
+  
+  /**
+   * Redirects to a page.
+   *
+   * @param string $filename the URL you want to redirect
+   * @return void
+   */
+  public function redirect($url) {
+    $this->header('Location', SITE_URL.'/'.$url);
   }
 
   /**

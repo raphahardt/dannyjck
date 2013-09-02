@@ -2,7 +2,5 @@
 
 require 'core/bootstrap.php';
 
-$Router->dispatch($_GET['q']);
-
-Core::dump();
-//dump();
+if (isset($Router))
+  $Router->dispatch($_GET['q']);

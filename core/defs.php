@@ -8,7 +8,7 @@ date_default_timezone_set('America/Sao_Paulo');
  * Titulo do site
  */
 if (!defined('SITE_TITLE'))
-  define('SITE_TITLE', 'CMS novo');
+  define('SITE_TITLE', 'CMS');
 
 /**
  * Subtitulo do site
@@ -20,34 +20,36 @@ if (!defined('SITE_SUBTITLE'))
  * Autor do site
  */
 if (!defined('SITE_OWNER'))
-  define('SITE_OWNER', 'FW Distrib');
+  define('SITE_OWNER', 'Raphael Hardt');
 
 /**
  * Copyright relacionado ao site
  */
 if (!defined('SITE_COPYRIGHT'))
-  define('SITE_COPYRIGHT', 'FW &copy;');
+  define('SITE_COPYRIGHT', 'Raphael Hardt - Creative Commons (BY-NC-ND) 3.0');
 
 /**
  * Keywords
  */
 if (!defined('SITE_KEYWORDS'))
-  define('SITE_KEYWORDS', 'teste,teste2,teste3');
+  define('SITE_KEYWORDS', '');
 
 /**
  * Description
  */
 if (!defined('SITE_DESCRIPTION'))
-  define('SITE_DESCRIPTION', 'O site é esse.');
+  define('SITE_DESCRIPTION', '');
 
 /**
  * Raiz de onde o site roda (path relativo ao DOC_ROOT configurado pelo server)
  */
 if (!defined('SITE_URL')) {
   $root = str_replace('/', DS, env('DOCUMENT_ROOT'));
-  $baseurl = str_replace(DS, '/', str_ireplace($root, '', DJCK));
+  $baseurl = str_replace(DS, '/', str_ireplace($root, '', ROOT));
   if (strpos($baseurl, '/') !== 0)
     $baseurl = '/'.$baseurl;
+  
+  if ($baseurl === '/') $baseurl = '';
   
   define('SITE_URL', $baseurl);
   
@@ -80,7 +82,7 @@ if (!defined('SITE_DOMAIN')) {
  * Host de onde estão os resources (imagens, js, css) estáticos
  */
 if (!defined('STATIC_URL')) {
-  define('STATIC_URL', SITE_FULL_URL.'/static_resources/all');
+  define('STATIC_URL', SITE_FULL_URL.'/public');
 }
 
 /**
@@ -141,3 +143,17 @@ if (!defined('COOKIE_DOMAIN'))
 if (!defined('COOKIE_PATH'))
   define('COOKIE_PATH', '/');
 
+
+// CACHE ---------------------------------------------------------------------------
+
+/**
+ * Tempo máximo de cache para resources estáticos
+ */
+if (!defined('CACHE_STATIC_SIZE'))
+  define('CACHE_STATIC_SIZE', 1 * 30 * 24 * 60 * 60); // 1 mes
+
+/**
+ * O mesmo que CACHE_STATIC_SIZE, mas em formato timestamp
+ */
+if (!defined('CACHE_STATIC_TIMESTAMP'))
+  define('CACHE_STATIC_TIMESTAMP', time() + CACHE_STATIC_SIZE);

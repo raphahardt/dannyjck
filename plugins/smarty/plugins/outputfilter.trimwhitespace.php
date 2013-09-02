@@ -60,7 +60,7 @@ function smarty_outputfilter_trimwhitespace($source, Smarty_Internal_Template $s
     $expressions = array(
         // replace multiple spaces between tags by a single space
         // can't remove them entirely, becaue that might break poorly implemented CSS display:inline-block elements
-        '#(:SMARTY@!@|>)\s+(?=@!@SMARTY:|<)#s' => '\1 \2',
+        '#(:SMARTY@!@|>)\s+(?=@!@SMARTY:|<)#s' => '\1\2',
         // remove spaces between attributes (but not in attribute values!)
         '#(([a-z0-9]\s*=\s*(["\'])[^\3]*?\3)|<[a-z0-9_]+)\s+([a-z/>])#is' => '\1 \4',
         // note: for some very weird reason trim() seems to remove spaces inside attributes.

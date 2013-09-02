@@ -2,7 +2,7 @@
 
 Core::depends('Cookie');
 
-class SessionException extends Exception {};
+class SessionException extends CoreException {};
 
 abstract class SessionCommon implements ArrayAccess, Countable {
   
@@ -11,131 +11,165 @@ abstract class SessionCommon implements ArrayAccess, Countable {
   );
   
   static private $started = false;
-  static protected $cookie;
-
-  static public function isStarted() {
-    return self::$started;
-  }
   
-  static public function start() {
+  private $cookie;
+  
+  public function __construct() {
     
-    $session = 'Session';
-    session_set_save_handler(
-      array($session, 'open'), 
-      array($session, 'close'), 
-      array($session, 'read'), 
-      array($session, 'write'), 
-      array($session, 'destroy'), 
-      array($session, 'gc')
-    );
+    if (!isset($this->cookie)) {
+      // define o obj cookie da session
+      $this->cookie = new Cookie( SESSION_NAME, 
+        ((SESSION_TIMEOUT > 0) ?
+          time() + SESSION_TIMEOUT :
+          0), 
+        null, null, null, true );
+    }
     
-    register_shutdown_function('session_write_close');
-    
-    if (SESSION_TIMEOUT > 0)
-      session_set_cookie_params(SESSION_TIMEOUT);
-    session_name(SESSION_NAME);
-    
-    try {
+    if (!self::$started) {
       
-      $sid = session_id();
+      // pega o sid antigo pelo cookie, ou se não existir, cria um novo
+      $sid = $this->cookie->get() ? $this->cookie->get() : $this->generateId();
 
-      if (empty($sid)) { //soh invoca na primeira requisicao (quando a session nao foi criada ainda)
-        self::generateId();
-        //session_id($sid); //gera uma chave unica para cada visitante
+      // verifica se o sid está correto (evita roubo de informações pelo cookie)
+      if (!$this->checkId($sid)) {
+        $_SESSION = array(); // apaga a variavel mágica da session (segurança)
+        $sid = $this->generateId();
+        //throw new Exception ('Tentando roubar informações, né?');
       }
       
+      // inicio das config da session ---
+      
+      // define os handlers de manipulação
+      session_set_save_handler(
+          array($this, 'open'),
+          array($this, 'close'),
+          array($this, 'read'),
+          array($this, 'write'),
+          array($this, 'destroy'),
+          array($this, 'gc')
+      );
+      
+      // registra função de shutdown: isso faz com que a session sempre seja
+      // gravada mesmo que um exit() seja chamado
+      register_shutdown_function('session_write_close');
+      
+      // define configurações de cookie da session
+      session_set_cookie_params(SESSION_TIMEOUT, 
+              $this->cookie->getPath(), 
+              $this->cookie->getDomain(),
+              $this->cookie->isSecure(),
+              $this->cookie->isHttpOnly());
+      session_name(SESSION_NAME);
+      session_id($sid);
+      
+      // inicia manipulação da session
       session_start();
       
-      // refresha o timeout da session na mão (medida de segurança da session pro cookie)
-      if (SESSION_TIMEOUT > 0) {
-        self::$cookie = new Cookie( SESSION_NAME, time() + SESSION_TIMEOUT, null, null, null, true );
-        $cookie_session = &self::$cookie;
-        if($cookie_session->get()) 
-          $cookie_session->set( $sid );
-      } else {
-        self::$cookie = new Cookie( SESSION_NAME, 0, null, null, null, true );
-        //$cookie_session = &self::$cookie;
-        //if($cookie_session->get()) 
-          //$cookie_session->set( $sid );
-      }
-      
       self::$started = true;
-      // BUG:
-      // quando session_start() é chamada, ela executa algumas funções da classe Session, como read() e write(),
-      // registradas pelo session_set_save_handler. dentro dessas funções, algumas instruções de banco
-      // são realizadas. quando um erro de banco acontecia e um echo() ou um Exception era jogado na tela, 
-      // o código simplesmente parava e caracteres estranhos eram mostrados na tela.
-      // FIX: capturar o Exception das classes de banco e dar um session_destroy() antes de mostrar (já feito abaixo)
-    } 
-    catch (Exception $e) {
-      session_destroy(); // arruma o bug do Exception aparecer com caracteres estranhos (9/4/13)
-      throw $e;
     }
-    
   }
   
-  abstract static public function open($savePath, $session_name);
-
-  abstract static public function close();
-
-  abstract static public function read($sid);
-
-  abstract static public function write($sid, $data);
-
-  abstract static public function destroy($sid);
-
-  abstract static public function gc($lifetime);
-
   /**
-   * Re-gera o id da sessao. Deve ser chamado apos o login por uma questao
-   * de seguranca.
+   * Gera uma chave única para sid de sessions.
+   * A chave é composta de:
+   * A-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWNNNNNNNN-B
+   * onde:
+   * A: digito verificador de 5 até 9
+   * X: browser (user-agent) do usuario, com hash aleatório e codificado em md5
+   * W: string única, codificada em md5
+   * N: ip do usuário
+   * B: digito verificador de 0 até 4
+   * @return string
    */
-  abstract static public function regenerate($old_sid);
-
-  static public function getId() {
-    if (!self::isStarted()) {
-      Session::start();
-    }
-    return session_id();
-  }
-
-  static public function setId($sid) {
-    if (!self::isStarted()) {
-      session_id($sid);
-    }
-  }
-
-  static protected function generateId() {
-    $sid = g_sessionid();
-
-    self::setId($sid); //gera uma chave unica para cada visitante
-    return $sid;
+  private function generateId() {
+    return sprintf('%d-%s%s%u-%d', 
+          mt_rand(5,9),
+          substr(md5(uniqid()), 0, 14),                // chave unica aleatoria (md5)
+          md5(env('HTTP_USER_AGENT').mt_rand(0, 3)),   // browser do usuario
+          ip2long(env('REMOTE_ADDR')),                 // ip do usuario
+          mt_rand(0,4)
+          );
   }
   
-  static protected function _encryptData($str, $key) {
-    return $str;
+  /**
+   * Verifica se o sid é valido e corresponde com a sessão do usuário.
+   * Retorna FALSE se o browser não for correto, se o IP não for valido ou correto ou
+   * se a chave única for invalida.
+   * @param string $sid sid da session a ser verificada
+   * @return boolean TRUE se o sid for válido
+   */
+  private function checkId($sid) {
+    list($dig1, $middle, $dig2) = explode('-', $sid);
+    $md5 = substr($middle, 0, 14);
+    $agent = substr($middle, 14, 32);
+    $ip = (double)substr($middle, 46);
     
-//    $block = mcrypt_get_block_size('des', 'ecb');
-//    $pad = $block - (strlen($str) % $block);
-//    $str .= str_repeat(chr($pad), $pad);
-//
-//    $iv = substr(md5(mt_rand(), true), 0, 8);
-//
-//    return base64_encode(mcrypt_encrypt(MCRYPT_DES, $key, $str, MCRYPT_MODE_ECB, $iv));
+
+    // confere browser
+    if (md5(env('HTTP_USER_AGENT').'0') !== $agent && 
+        md5(env('HTTP_USER_AGENT').'1') !== $agent && 
+        md5(env('HTTP_USER_AGENT').'2') !== $agent && 
+        md5(env('HTTP_USER_AGENT').'3') !== $agent)
+      return false;
+
+    // confere ip
+    if (ip2long(env('REMOTE_ADDR')) != $ip)
+      return false;
+
+    // confere md5
+    if (preg_match('/[^0-9a-f]/', $md5))
+      return false;
+
+    // tudo ok, sid confere
+    return true;
+  }
+  
+  /**
+   * Gera uma nova sid para a session atual, mantendo todas as informações da sessão.
+   * Serve como uma camada para evitar roubo de informação por cookie.
+   * Essa função é usada especialmente após logins.
+   */
+  public function regenerateId() {
+    if (isset($this->cookie) && self::$started) {
+      $sid = session_id();
+      $new_sid = $this->generateId();
+
+      $data = $this->read($sid);
+      $this->destroy($sid);
+      $this->write($new_sid, $data);
+
+      session_id($new_sid);
+      $this->cookie->set($new_sid);
+    }
+  }
+  
+  /**
+   * Interrompe a escrita nas sessions.
+   * É usado principalmente logo após gravar as informações de usuario na session,
+   * para evitar mudanças após o script
+   */
+  public function interrupt() {
+    session_write_close();
+  }
+  
+  abstract public function open($save_path, $session_name);
+
+  abstract public function close();
+
+  abstract public function read($sid);
+
+  abstract public function write($sid, $data);
+
+  public function destroy($sid) {
+    //$_SESSION = array();
+    if (isset($this->cookie)) {
+      $this->cookie->delete();
+    }
+    return true;
   }
 
-  static protected function _decryptData($str, $key) {
-    return $str;
-//    
-//    $iv = substr(md5(mt_rand(), true), 0, 8);
-//
-//    $str = base64_decode($str);
-//    $str = mcrypt_decrypt(MCRYPT_DES, $key, $str, MCRYPT_MODE_ECB, $iv);
-//
-//    $block = mcrypt_get_block_size('des', 'ecb');
-//    $pad = ord($str[($len = strlen($str)) - 1]);
-//    return substr($str, 0, strlen($str) - $pad);
-  }
+  abstract public function gc($lifetime);
+  
 
   public function count() {
     return count($_SESSION);

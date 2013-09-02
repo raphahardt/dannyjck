@@ -6,11 +6,24 @@
  * @package Minify
  */
 
-define('_DEFS_ONLY', true);
-require '../../index.php';
+require_once 'init.php';
 
-$root = DJCK;
-//$root = substr(__FILE__, 0, -23);
+if (!defined('_MIN_FILE')) exit();
+
+define('_DEFS_ONLY', true);
+require_once _MIN_FILE;
+
+/**
+ * Allow use of the Minify URI Builder app. Only set this to true while you need it.
+ */
+$min_enableBuilder = false;
+
+/**
+ * If non-empty, the Builder will be protected with HTTP Digest auth.
+ * The username is "admin".
+ */
+$min_builderPassword = 'admin';
+
 
 /**
  * Set to true to log messages to FirePHP (Firefox Firebug addon).
@@ -20,7 +33,7 @@ $root = DJCK;
  * If you want to use a custom error logger, set this to your logger
  * instance. Your object should have a method log(string $message).
  */
-$min_errorLogger = false;
+$min_errorLogger = true;
 
 
 /**
@@ -39,21 +52,13 @@ $min_allowDebugFlag = false;
 
 
 /**
- * Allow use of the Minify URI Builder app. If you no longer need 
- * this, set to false.
- **/
-$min_enableBuilder = false;
-
-
-/**
  * For best performance, specify your temp directory here. Otherwise Minify
  * will have to load extra code to guess. Some examples below:
  */
-//$min_cachePath = $root.'/plugins/min/cache';
-$min_cachePath = $root.DS.'_tmp'.DS.'min';
-
+//$min_cachePath = 'c:\\WINDOWS\\Temp';
 //$min_cachePath = '/tmp';
 //$min_cachePath = preg_replace('/^\\d+;/', '', session_save_path());
+$min_cachePath = TEMP_PATH.DS.'min';
 /**
  * To use APC/Memcache/ZendPlatform for cache storage, require the class and
  * set $min_cachePath to an instance. Example below:
@@ -73,16 +78,16 @@ $min_cachePath = $root.DS.'_tmp'.DS.'min';
  * second line. The third line might work on some Apache servers.
  */
 //$min_documentRoot = '';
-//$min_documentRoot = $root.'/public';
-$min_documentRoot = $root.DS.'public';
+//$min_documentRoot = substr(__FILE__, 0, -15);
 //$min_documentRoot = $_SERVER['SUBDOMAIN_DOCUMENT_ROOT'];
+$min_documentRoot = dirname(dirname(dirname(__FILE__)));
 
 
 /**
  * Cache file locking. Set to false if filesystem is NFS. On at least one 
  * NFS system flock-ing attempts stalled PHP for 30 seconds!
  */
-$min_cacheFileLocking = false;
+$min_cacheFileLocking = true;
 
 
 /**
@@ -105,20 +110,14 @@ $min_serveOptions['bubbleCssImports'] = false;
  * Note: Despite this setting, if you include a number at the end of the
  * querystring, maxAge will be set to one year. E.g. /min/f=hello.css&123456
  */
-//$_6months = 6 * 30 * 24 * 60 * 60;
-//$min_serveOptions['maxAge'] = $_6months;
-$min_serveOptions['maxAge'] = CACHE_STATIC_SIZE;
+$min_serveOptions['maxAge'] = defined('CACHE_STATIC_SIZE') ? CACHE_STATIC_SIZE : (1 * 30 * 24 * 60 * 60);
 
 
 /**
- * To use Google's Closure Compiler API (falling back to JSMin on failure),
- * uncomment the following lines:
+ * To use Google's Closure Compiler API to minify Javascript (falling back to JSMin
+ * on failure), uncomment the following line:
  */
-//function closureCompiler($js) {
-//    require_once 'Minify/JS/ClosureCompiler.php';
-//    return Minify_JS_ClosureCompiler::minify($js);
-//}
-//$min_serveOptions['minifiers']['application/x-javascript'] = 'closureCompiler';
+//$min_serveOptions['minifiers']['application/x-javascript'] = array('Minify_JS_ClosureCompiler', 'minify');
 
 
 /**
@@ -129,14 +128,7 @@ $min_serveOptions['maxAge'] = CACHE_STATIC_SIZE;
  * 
  * // = shortcut for DOCUMENT_ROOT 
  */
-$min_serveOptions['minApp']['allowDirs'] = array(
-    '//js', 
-    '//css', 
-    URI_STATIC.'/public/css',
-    URI_STATIC.'/public/js',
-    URI_STATIC.'/'.DJCK_APP_STATIC_FOLDER.'/css',
-    URI_STATIC.'/'.DJCK_APP_STATIC_FOLDER.'/js'
-    );
+//$min_serveOptions['minApp']['allowDirs'] = array('//js', '//css');
 
 /**
  * Set to true to disable the "f" GET parameter for specifying files.
@@ -154,6 +146,21 @@ $min_serveOptions['minApp']['groupsOnly'] = false;
  */
 //$min_serveOptions['minApp']['noMinPattern'] = '@[-\\.]min\\.(?:js|css)$@i';
 
+/**
+ * O minify reescreve as urls relativas nos CSS's. Esta opção abaixo força ele a
+ * reescrever usando o diretorio abaixo
+ */
+$root = str_replace('/', DS, env('DOCUMENT_ROOT'));
+$baseurl = str_replace(DS, '/', str_ireplace($root, '', DJCK));
+if (strpos($baseurl, '/') !== 0)
+  $baseurl = '/'.$baseurl;
+if ($baseurl == '/') $baseurl = '';
+
+$min_serveOptions['rewriteCssUris'] = false;
+$min_serveOptions['minifierOptions']['text/css']['prependRelativePath'] = $baseurl.'/public/css/';
+
+unset($root, $baseurl);
+
 
 /**
  * If you minify CSS files stored in symlink-ed directories, the URI rewriting
@@ -168,7 +175,11 @@ $min_serveOptions['minApp']['groupsOnly'] = false;
  * </code>
  */
 $min_symlinks = array();
+// Set $sitePrefix to the path of the site from the webserver's real docroot
+list($sitePrefix) = explode('/min/index.php', $_SERVER['SCRIPT_NAME'], 2);
 
+// Prepend $sitePrefix to the rewritten URIs in CSS files
+$min_symlinks['//' . ltrim($sitePrefix, '/')] = $min_documentRoot;
 
 /**
  * If you upload files from Windows to a non-Windows server, Windows may report

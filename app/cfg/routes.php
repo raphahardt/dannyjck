@@ -6,4 +6,14 @@
 
 $Router = new Router();
 
-$Router->map('imagem.jpg', 'home#imagem');
+/**
+ * Login
+ */
+$Router->map('login', array('LoginController' => null));
+$Router->map('login/esqueci', 'login#esqueci');
+$Router->map('login/auth', 'login#auth');
+$Router->map('logout', 'login#logout');
+
+$Router->map('imagem.jpg', 'home#favicon');
+
+

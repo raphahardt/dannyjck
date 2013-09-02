@@ -4,8 +4,6 @@
  * @package Minify
  */
 
-require_once 'Minify/Controller/Base.php';
-
 /**
  * Controller class for requests to /min/index.php
  * 
@@ -18,10 +16,17 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
      * Set up groups of files as sources
      * 
      * @param array $options controller and Minify options
+     *
      * @return array Minify options
-     * 
      */
     public function setupSources($options) {
+        // PHP insecure by default: realpath() and other FS functions can't handle null bytes.
+        foreach (array('g', 'b', 'f') as $key) {
+            if (isset($_GET[$key])) {
+                $_GET[$key] = str_replace("\x00", '', (string)$_GET[$key]);
+            }
+        }
+
         // filter controller options
         $cOptions = array_merge(
             array(
@@ -35,8 +40,7 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
         unset($options['minApp']);
         $sources = array();
         $this->selectionId = '';
-        $missingUri = '';
-        
+        $firstMissingResource = null;
         if (isset($_GET['g'])) {
             // add group(s)
             $this->selectionId .= 'g=' . $_GET['g'];
@@ -45,7 +49,8 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
                 $this->log("Duplicate group key found.");
                 return $options;
             }
-            foreach (explode(',', $_GET['g']) as $key) {
+            $keys = explode(',', $_GET['g']);
+            foreach ($keys as $key) {
                 if (! isset($cOptions['groups'][$key])) {
                     $this->log("A group configuration for \"{$key}\" was not found");
                     return $options;
@@ -70,7 +75,14 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
                         $sources[] = $this->_getFileSource($realpath, $cOptions);
                     } else {
                         $this->log("The path \"{$file}\" (realpath \"{$realpath}\") could not be found (or was not a file)");
-                        return $options;
+                        if (null === $firstMissingResource) {
+                            $firstMissingResource = basename($file);
+                            continue;
+                        } else {
+                            $secondMissingResource = basename($file);
+                            $this->log("More than one file was missing: '$firstMissingResource', '$secondMissingResource'");
+                            return $options;
+                        }
                     }
                 }
                 if ($sources) {
@@ -135,11 +147,12 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
                 $realpath = realpath($path);
                 if (false === $realpath || ! is_file($realpath)) {
                     $this->log("The path \"{$path}\" (realpath \"{$realpath}\") could not be found (or was not a file)");
-                    if (! $missingUri) {
-                        $missingUri = $uri;
+                    if (null === $firstMissingResource) {
+                        $firstMissingResource = $uri;
                         continue;
                     } else {
-                        $this->log("More than one file was missing: '$missingUri', '$uri'");
+                        $secondMissingResource = $uri;
+                        $this->log("More than one file was missing: '$firstMissingResource', '$secondMissingResource`'");
                         return $options;
                     }
                 }
@@ -159,11 +172,13 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
             $this->selectionId .= implode(',', $basenames) . $ext;
         }
         if ($sources) {
-            if ($missingUri) {
+            if (null !== $firstMissingResource) {
                 array_unshift($sources, new Minify_Source(array(
                     'id' => 'missingFile'
+                    // should not cause cache invalidation
                     ,'lastModified' => 0
-                    ,'content' => "/* Minify: missing file '" . ltrim($missingUri, '/') . "' */\n"
+                    // due to caching, filename is unreliable.
+                    ,'content' => "/* Minify: at least one missing file. See " . Minify::URL_DEBUG . " */\n"
                     ,'minifier' => ''
                 )));
             }
@@ -174,20 +189,34 @@ class Minify_Controller_MinApp extends Minify_Controller_Base {
         return $options;
     }
 
+    /**
+     * @param string $file
+     *
+     * @param array $cOptions
+     *
+     * @return Minify_Source
+     */
     protected function _getFileSource($file, $cOptions)
     {
         $spec['filepath'] = $file;
-        if ($cOptions['noMinPattern']
-            && preg_match($cOptions['noMinPattern'], basename($file))) {
-            $spec['minifier'] = '';
+        if ($cOptions['noMinPattern'] && preg_match($cOptions['noMinPattern'], basename($file))) {
+            if (preg_match('~\.css$~i', $file)) {
+                $spec['minifyOptions']['compress'] = false;
+            } else {
+                $spec['minifier'] = '';
+            }
         }
         return new Minify_Source($spec);
     }
 
     protected $_type = null;
 
-    /*
+    /**
      * Make sure that only source files of a single type are registered
+     *
+     * @param string $sourceOrExt
+     *
+     * @throws Exception
      */
     public function checkType($sourceOrExt)
     {

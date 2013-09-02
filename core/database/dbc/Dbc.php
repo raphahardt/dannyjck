@@ -1,11 +1,8 @@
 <?php
 
-define('DJCK_DB_SCHEMA', base64_decode('ZmFzdG1vdG9ycw=='));
-define('DJCK_DB_USER', 'root');
-define('_DJCK_DB_PASSWORD', '');
-define('DJCK_DB_HOST', 'localhost');
+Core::depends('DbcConfig');
 
-class DbcException extends Exception {};
+class DbcException extends CoreException {}
 
 class Dbc {
 
@@ -37,21 +34,31 @@ class Dbc {
    * @param string $dbhost Host
    * @param string $charset Charset
    */
-  public function __construct($dbname = DJCK_DB_SCHEMA, $dbuser = DJCK_DB_USER, $dbpass = _DJCK_DB_PASSWORD, $dbhost = DJCK_DB_HOST, $charset = 'UTF8') {
+  public function __construct($config = null) {
+
+    if (!isset($config)) {
+      $config = 'default';
+    }
+
+    // pega a configuracao
+    $config_params = DbcConfig::get($config);
 
     // faz uma conexão com o banco de dados
-    $this->con = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname, '3306');
+    $this->con = mysqli_connect($config_params['#host'], 
+            $config_params['#user'], 
+            $config_params['#password'], 
+            $config_params['#schema'], '3306');
     if (mysqli_connect_error()) {
       // erro de conexão
       throw new DbcException(mysqli_connect_errno() . ': ' . mysqli_connect_error());
     }
 
     // define o nome do banco da conexao
-    $this->schema = strtoupper($dbuser);
+    $this->schema = strtoupper($config_params['#schema']);
 
     // define o charset utilizado
-    mysqli_set_charset($this->con, $charset);
-    $this->charset = $charset;
+    mysqli_set_charset($this->con, $config_params['#charset']);
+    $this->charset = $config_params['#charset'];
 
     // limpa variaveis internas 
     // FIXME: talvez não precise dessa chamada...
@@ -76,13 +83,20 @@ class Dbc {
    * @param string $dbhost Host
    * @param string $charset Charset
    */
-  public static function getInstance($dbname = DJCK_DB_SCHEMA, $dbuser = DJCK_DB_USER, $dbpass = _DJCK_DB_PASSWORD, $dbhost = DJCK_DB_HOST) {
-    $instance = & self::$_instances[$dbname . '-' . $dbuser . '-' . $dbhost];
+  public static function getInstance($config = null) {
+    if (!isset($config)) {
+      $config = 'default';
+    }
+
+    // pega a configuracao
+    $config_params = DbcConfig::get($config);
+
+    $instance = & self::$_instances[$config_params['#schema'] . '-' . $config_params['#user'] . '-' . $config_params['#host']];
 
     // verifica se a instancia já existe
     if (!isset($instance) || empty($instance)) {
       // cria uma nova instancia, se não existe, e guarde no "cache" de conexões
-      $instance = new self($dbname, $dbuser, $dbpass, $dbhost);
+      $instance = new self($config);
     } else {
       // se já existe, limpa valores privates da instancia
       $instance->clearAll();
@@ -108,6 +122,10 @@ class Dbc {
     }
     // destroi o array e a referencia
     unset($instances);
+  }
+
+  public function getResource() {
+    return $this->con;
   }
 
   /**
@@ -146,11 +164,11 @@ class Dbc {
    * @param string $dbhost Host
    * @param string $charset Charset
    */
-  public function connect($dbname = DJCK_DB_SCHEMA, $dbuser = DJCK_DB_USER, $dbpass = _DJCK_DB_PASSWORD, $dbhost = DJCK_DB_HOST, $charset = 'UTF8') {
+  public function connect($config = null) {
     if (is_object($this->con))
       return $this->con;
     else {
-      return new self($dbname, $dbuser, $dbpass, $dbhost, $charset);
+      return new self($config);
     }
   }
 
@@ -209,7 +227,7 @@ class Dbc {
     } else {
       // faz o prepare numa nova instancia de stmt
       $this->stmt[$index] = mysqli_prepare($this->con, $query);
-      
+
       if (mysqli_error($this->con)) {
         // erro de conexão
         throw new DbcException(mysqli_errno($this->con) . ': ' . mysqli_error($this->con));

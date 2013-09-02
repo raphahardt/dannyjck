@@ -12,10 +12,12 @@ define('MINIFY_MIN_DIR', dirname(__FILE__));
 // load config
 require MINIFY_MIN_DIR . '/config.php';
 
-// setup include path
-set_include_path($min_libPath . PATH_SEPARATOR . get_include_path());
+if (isset($_GET['test'])) {
+    include MINIFY_MIN_DIR . '/config-test.php';
+}
 
-require 'Minify.php';
+require "$min_libPath/Minify/Loader.php";
+Minify_Loader::register();
 
 Minify::$uploaderHoursBehind = $min_uploaderHoursBehind;
 Minify::setCache(
@@ -25,8 +27,7 @@ Minify::setCache(
 
 if ($min_documentRoot) {
     $_SERVER['DOCUMENT_ROOT'] = $min_documentRoot;
-} elseif (0 === stripos(PHP_OS, 'win')) {
-    Minify::setDocRoot(); // IIS may need help
+    Minify::$isDocRootSet = true;
 }
 
 $min_serveOptions['minifierOptions']['text/css']['symlinks'] = $min_symlinks;
@@ -36,24 +37,11 @@ foreach ($min_symlinks as $uri => $target) {
 }
 
 if ($min_allowDebugFlag) {
-    if (! empty($_COOKIE['minDebug'])) {
-        foreach (preg_split('/\\s+/', $_COOKIE['minDebug']) as $debugUri) {
-            if (false !== strpos($_SERVER['REQUEST_URI'], $debugUri)) {
-                $min_serveOptions['debug'] = true;
-                break;
-            }
-        }
-    }
-    // allow GET to override
-    if (isset($_GET['debug'])) {
-        $min_serveOptions['debug'] = true;
-    }
+    $min_serveOptions['debug'] = Minify_DebugDetector::shouldDebugRequest($_COOKIE, $_GET, $_SERVER['REQUEST_URI']);
 }
 
 if ($min_errorLogger) {
-    require_once 'Minify/Logger.php';
     if (true === $min_errorLogger) {
-        require_once 'FirePHP.php';
         $min_errorLogger = FirePHP::getInstance(true);
     }
     Minify_Logger::setLogger($min_errorLogger);
@@ -71,11 +59,10 @@ if (isset($_GET['f']) || isset($_GET['g'])) {
     // serve!   
 
     if (! isset($min_serveController)) {
-        require 'Minify/Controller/MinApp.php';
         $min_serveController = new Minify_Controller_MinApp();
     }
-
-    Minify::serve($min_serveController, $min_serveOptions);        
+    Minify::serve($min_serveController, $min_serveOptions);
+        
 } elseif ($min_enableBuilder) {
     header('Location: builder/');
     exit();
