@@ -9,3 +9,4 @@
 
 Core::register('HomeController', 'controller/home');
 Core::register('ErrorController', 'controller/home');
+Core::register('StaticContentController', 'controller/home');

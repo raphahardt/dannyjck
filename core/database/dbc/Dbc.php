@@ -227,7 +227,7 @@ class Dbc {
     } else {
       // faz o prepare numa nova instancia de stmt
       $this->stmt[$index] = mysqli_prepare($this->con, $query);
-
+      
       if (mysqli_error($this->con)) {
         // erro de conexão
         throw new DbcException(mysqli_errno($this->con) . ': ' . mysqli_error($this->con));

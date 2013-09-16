@@ -140,7 +140,13 @@ class Request {
    * @return void
    */
   protected function _processPost() {
+    if (strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+      // resolve problema do angularjs que manda dados de POST via ajax como json, e não como
+      // application/x-www-form-urlencoded
+      $this->data = (array)$this->input('json_decode');
+    } else {
     $this->data = $_POST;
+    }
     if (ini_get('magic_quotes_gpc') === '1') {
       $this->data = stripslashes_deep($this->data);
     }

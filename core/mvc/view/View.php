@@ -7,7 +7,7 @@ Core::import('Smarty', 'plugin/smarty');
  *
  * @author Rapha e Dani
  */
-abstract class View extends Smarty {
+class View extends Smarty {
   
   // pagina que será exibida
   private $view = array();

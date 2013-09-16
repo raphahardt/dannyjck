@@ -10,7 +10,6 @@ Core::setup(); // carrega os autoloads
 // interface
 Core::import('Response', 'core/network');
 Core::import('Request', 'core/network');
-Core::import('Router', 'core/router');
 
 // database
 Core::import('DbcConfig', 'core/database/dbc');
@@ -23,8 +22,11 @@ Core::import('Model', 'core/mvc/model');
 Core::import('ModelCollection', 'core/mvc/model');
 Core::import('View', 'core/mvc/view');
 
+// router
+Core::import('Router', 'core/router');
+
 // menu
-Core::import('Menu', 'core/menu');
+//Core::import('Menu', 'core/menu');
 
 // client comm
 Core::import('Cookie', 'core/cookie');

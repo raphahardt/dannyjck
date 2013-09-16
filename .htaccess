@@ -34,7 +34,7 @@ RewriteRule ^min/(.*)$ plugins/min/$1 [NC]
 #as condicoes abaixo devem ser as ultimsa da lista de rewrites, ja que a regra (RewriteRule) esta definida com a flag L (Last).
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !=/favicon.ico
+#RewriteCond %{REQUEST_URI} !=/favicon.ico
 RewriteRule ^([a-zA-Z0-9\_\/\-\+\.]*)$ index.php?q=$1 [L,NC,QSA]
 
 # Compacta os arquivos necessarios

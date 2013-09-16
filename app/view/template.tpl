@@ -13,6 +13,8 @@
   <meta property="og:site_name" content="{$site.title}"/>
   <meta property="og:description" content="{block 'page.description'}{$site.description}{/block}"/>
   {/block}
+  
+  <link rel="canonical" href="http://www.reacaoeditora.com.br"/>
 
   {block 'page.icons'}
     {foreach $view.icons as $icon}

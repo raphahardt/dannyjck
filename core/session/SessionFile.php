@@ -24,7 +24,11 @@ class SessionFile extends SessionCommon {
   }
 
   public function read($sid) {
-    return (string)@file_get_contents($this->savePath.SESSION_NAME."_$sid");
+    $string = '';
+    try {
+      $string = (string)@file_get_contents($this->savePath.SESSION_NAME."_$sid");
+    } catch (Exception $e){}
+    return $string;
   }
 
   public function write($sid, $data) {

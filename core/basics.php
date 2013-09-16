@@ -158,7 +158,7 @@ if (!function_exists('fmt_value')) {
    * @return string String com valor formatado, com sufixo (B,KB,MB,GB,TB)
    */
   function fmt_bytes($value) {
-    return fmt_value($value, 1024, 3, array(
+    return fmt_value($value, 1000, 3, array(
        0=>'B',
        1=>'KB',
        2=>'MB',

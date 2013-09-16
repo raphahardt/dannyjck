@@ -14,7 +14,7 @@ if (!defined('APP_PATH'))
 if (!defined('PLUGIN_PATH'))
   define('PLUGIN_PATH', DJCK.DS.'plugins');
 
-class CoreException extends Exception {};
+class CoreException extends Exception {}
 
 /**
  * Description of Core
@@ -80,19 +80,19 @@ abstract class Core {
     $type = array_shift($parts);
     
     // pega o path do tipo e acrescenta no inicio do caminho do arquivo
-    if (self::$types[$type]['path']) {
+    if (isset(self::$types[$type]['path'])) {
       $path_ = explode('/', (string)self::$types[$type]['path']);
       $parts = array_merge($path_, $parts);
       unset($path_);
     }
     
     // caminho absoluto para o arquivo
-    if (self::$types[$type]['core'])
+    if (self::$types[$type]['core'] === true)
       $abs_path = CORE_PATH . DS;
     else {
-      if (self::$types[$type]['root'])
+      if (self::$types[$type]['root'] === true)
         $abs_path = DJCK . DS;
-      elseif (self::$types[$type]['plugins'])
+      elseif (self::$types[$type]['plugins'] === true)
         $abs_path = PLUGIN_PATH . DS;
       else
         $abs_path = APP_PATH . DS;
@@ -201,8 +201,46 @@ abstract class Core {
     self::uses($class, $path, $force);
   }
   
+  final static function error_handler($errno, $errstr, $errfile, $errline) {
+    $severity =
+            1 * E_ERROR |
+            1 * E_WARNING |
+            1 * E_PARSE |
+            0 * E_NOTICE |
+            1 * E_CORE_ERROR |
+            1 * E_CORE_WARNING |
+            1 * E_COMPILE_ERROR |
+            1 * E_COMPILE_WARNING |
+            1 * E_USER_ERROR |
+            1 * E_USER_WARNING |
+            0 * E_USER_NOTICE |
+            0 * E_STRICT |
+            0 * E_RECOVERABLE_ERROR |
+            1 * E_DEPRECATED |
+            0 * E_USER_DEPRECATED;
+    $ex = new ErrorException($errstr, $errno, $errno, $errfile, $errline);
+    if (($ex->getSeverity() & $severity) != 0) {
+      throw $ex;
+    }
+  }
+  
+  final static function exception_handler($exception) {
+    echo "Uncaught exception: " , $exception->getMessage(), 
+            " on line ", $exception->getLine(), 
+            " in file ", $exception->getFile(), 
+            "\n";
+  }
+  
   final static function setup() {
+    // define auto loader
     spl_autoload_register(array('Core', 'load'));
+    
+    // define handler de errors do php para sempre jogarem exceptions
+    //error_reporting(0);
+    //set_error_handler(array('Core', 'error_handler'));
+    
+    // lida com os exceptions que nao foram capturados
+    //set_exception_handler(array('Core', 'exception_handler'));
   }
   
   static function dump() {

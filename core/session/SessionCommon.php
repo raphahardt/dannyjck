@@ -2,7 +2,7 @@
 
 Core::depends('Cookie');
 
-class SessionException extends CoreException {};
+class SessionException extends CoreException {}
 
 abstract class SessionCommon implements ArrayAccess, Countable {
   

@@ -3,12 +3,13 @@
 Core::depends('Request');
 Core::depends('Response');
 
-class ControllerException extends CoreException {};
+class ControllerException extends CoreException {}
 
 abstract class Controller {
   
   public $request;
   public $response;
+  public $router;
   protected $session;
   
   protected $logged = null;
@@ -47,6 +48,6 @@ abstract class Controller {
     return;
   }
   
-  abstract function index();
+  //abstract function index();
   
 }

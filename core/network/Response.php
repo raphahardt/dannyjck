@@ -456,9 +456,9 @@ class Response {
   protected function _sendHeader($name, $value = null) {
     if (!headers_sent()) {
       if (is_null($value)) {
-        header($name, false, $this->_status);
+        header($name, true, $this->_status);
       } else {
-        header("{$name}: {$value}", false, $this->_status);
+        header("{$name}: {$value}", true, $this->_status);
       }
     }
   }
@@ -1020,6 +1020,7 @@ class Response {
    */
   public function redirect($url) {
     $this->header('Location', SITE_URL.'/'.$url);
+    $this->body('');
   }
 
   /**

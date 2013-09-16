@@ -21,5 +21,4 @@
 {/block}
 {block 'ad.728'}{/block}
 {block 'page.footer'}{/block}
-{block 'page.js' append}
-{/block}
+{block 'page.js'}{/block}

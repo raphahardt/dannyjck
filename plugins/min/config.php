@@ -154,10 +154,9 @@ $root = str_replace('/', DS, env('DOCUMENT_ROOT'));
 $baseurl = str_replace(DS, '/', str_ireplace($root, '', DJCK));
 if (strpos($baseurl, '/') !== 0)
   $baseurl = '/'.$baseurl;
-if ($baseurl == '/') $baseurl = '';
 
 $min_serveOptions['rewriteCssUris'] = false;
-$min_serveOptions['minifierOptions']['text/css']['prependRelativePath'] = $baseurl.'/public/css/';
+$min_serveOptions['minifierOptions']['text/css']['prependRelativePath'] = SITE_FULL_URL.'/public/css/';
 
 unset($root, $baseurl);
 
