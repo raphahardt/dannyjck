@@ -2,12 +2,12 @@
   overflow: hidden;
   text-indent: -9999px;
   width: 320px;
-  background: url('../../static/layout/re-mangaker.png') no-repeat 15px 50%;
+  background: url('/static/layout/re-mangaker.png') no-repeat 15px 50%;
 }
 
 @media (max-width: 991px) {
   .re-logo {
     width: 230px;
-    background-image: url('../../static/200/layout/re-mangaker.png');
+    background-image: url('/static/200/layout/re-mangaker.png');
   }
 }

@@ -30,10 +30,11 @@
 
   <!-- CSS -->
   <link href='http://fonts.googleapis.com/css?family=Armata|Short+Stack' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="{$site.URL}/min/?g=css" type="text/css">
+  <link rel="stylesheet/less" type="text/css" href="{$site.URL}/public/less/base.less" />
+  {*<link rel="stylesheet" href="{$site.URL}/min/?g=css" type="text/css">
   <!--[if lte IE 7]>
   <link rel="stylesheet" href="{$site.URL}/min/?g=css_ie7" type="text/css">
-  <![endif]-->
+  <![endif]-->*}
   <!-- Modernizr -->
   <script src="{$site.URL}/min/?g=essentials"></script>
   {if $view.js_vars}
