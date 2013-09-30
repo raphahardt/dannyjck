@@ -108,10 +108,16 @@ class Router {
       else
         $requestUrl = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
     }
+    $baseUrlLength = strlen(SITE_URL)+1; // +1 = barra
 
     // Strip query string (?a=b) from Request Url
     if (($strpos = strpos($requestUrl, '?')) !== false) {
       $requestUrl = substr($requestUrl, 0, $strpos);
+    }
+    
+    // deixa a barra no final sempre opcional ----- mudança
+    if (strlen($requestUrl) - $baseUrlLength > 1 && substr($requestUrl, -1) === '/') {
+      $requestUrl = substr($requestUrl, 0, -1);
     }
 
     // Force request_order to be GP
@@ -121,6 +127,25 @@ class Router {
     foreach ($this->routes as $handler) {
       list($_route, $target, $name) = $handler;
       
+      // verifica se o target é um link pra outra rota ou se é um controller mesmo
+      if (is_string($target)) {
+        list($url, $method) = explode('#', $target);
+        if (!$method)
+          $method = null;
+
+        if (isset($this->namedRoutes[$url])) {
+          $class = $this->namedRoutes[$url]['controller'];
+          if ($class)
+            $target = array($class => $method);
+        }
+        unset($url, $method, $class);
+        // se ainda sim não vier um array, o controller não foi definido corretamente
+        if (!is_array($target)) {
+          throw new RouterException('Rota '.$target.' não foi definida corretamente.'.
+                  'Verifique se ela está sendo linkada com uma rota que não tenha nome ou controller definido');
+        }
+      }
+      
       //echo $requestUrl,'<br>',$_route,'<br>';
       
       // Check for a wildcard (matches all)
@@ -129,6 +154,7 @@ class Router {
       } elseif (isset($_route[0]) && $_route[0] === '@') {
         $match = preg_match('`' . substr($_route, 1) . '`', $requestUrl, $params);
       } else {
+        
         $route = null;
         $regex = false;
         $j = 0;
@@ -234,7 +260,7 @@ class Router {
     // procura o controller se $controller for um link (string)
     // o link deve ser da seguinte forma: url_id#action
     // se action for omitido, "index" é usado
-    if (is_string($controller)) {
+    /*if (is_string($controller)) {
       list($url, $method) = explode('#', $controller);
       if (!$method)
         $method = null;
@@ -250,7 +276,7 @@ class Router {
         throw new RouterException('Rota '.$target.' não foi definida corretamente.'.
                 'Verifique se ela está sendo linkada com uma rota que não tenha nome ou controller definido');
       }
-    }
+    }*/
 
     // pega a ação e o controller a ser usado
     if (is_array($controller))
@@ -307,22 +333,38 @@ class Router {
         // verifica os parametros do metodo (ação) e passa os objetos corretos conforme
         // o metodo precise
         foreach ($rflc_parameters as $rflc_param) {
-          switch ($rflc_param->getName()) {
-            case 'view':
+          $param_name = $rflc_param->getName();
+          switch ($param_name) {
+            case 'View':
               // se o metodo tiver $view, instanciar uma view automaticamente de 
               // acordo com o tipo de objeto que veio
               $class_view = $rflc_param->getClass()->getName();
               Core::depends($class_view);
               
-              $view = new $class_view($class->default_path."/$action.tpl");
+              $view = new $class_view($class->viewPath."$action.tpl");
               
               $params_to_pass[] = $view;
               break;
+            case 'token':
+              // se vier $token como parametro, ele ja devolve o token enviado por request
+              // tanto GET ou POST
+              $params_to_pass[] = $_REQUEST['token'];
+              break;
+            default:
+              // se for um parametro normal
+              if (isset($params[ $param_name ])) {
+                $params_to_pass[] = $params[ $param_name ];
+              } else {
+                // passa null para os parametros obrigatorios
+                if ($rflc_param->isOptional() !== true)
+                  $params_to_pass[] = null;
+              }
           }
         }
         
         // chama o metodo       
-        call_user_func_array(array(&$class, $action), $params_to_pass);
+        //$ctrl_response = call_user_func_array(array(&$class, $action), $params_to_pass);
+        $ctrl_response = $class->execute($action, $params_to_pass);
         
         // after
         $class->afterExecute();

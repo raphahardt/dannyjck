@@ -6,12 +6,12 @@
  * @package Minify
  */
 
-require_once 'init.php';
+/*require_once 'init.php';
 
 if (!defined('_MIN_FILE')) exit();
 
 define('_DEFS_ONLY', true);
-require_once _MIN_FILE;
+require_once _MIN_FILE;*/
 
 /**
  * Allow use of the Minify URI Builder app. Only set this to true while you need it.

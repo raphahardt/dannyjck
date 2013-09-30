@@ -28,7 +28,7 @@ Options +FollowSymlinks -Indexes
 RewriteEngine on
 
 # Redireciona o min para a pasta correta
-RewriteRule ^min/(.*)$ plugins/min/$1 [NC] 
+#RewriteRule ^min/(.*)$ plugins/min/$1 [NC] 
 
 #paginas
 #as condicoes abaixo devem ser as ultimsa da lista de rewrites, ja que a regra (RewriteRule) esta definida com a flag L (Last).

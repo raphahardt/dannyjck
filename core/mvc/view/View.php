@@ -163,12 +163,43 @@ class View extends Smarty {
     );
   }
 
+  /**
+   * Define uma variavel que vai responder em $view.[nomedavariavel]
+   * @param type $title
+   * @param type $val
+   */
   public function setVar($title, $val) {
     $this->vars[$title] = $val;
   }
   
   public function getVar($title) {
     return $this->vars[$title];
+  }
+  
+  /**
+   * Define o template a ser renderizado. O construtor do view já exige que um view seja
+   * definido, e ele é previamente definido pelo Router como pastapadraodocontroller/index.tpl
+   * Esse método serve para ter a possibilidade de mudar o view dentro do controller.
+   * Sempre é alterado o último view da "fila" de herança
+   * @param type $template
+   */
+  public function setView($template) {
+    array_pop($this->view); // deleta o ultimo view definido, pois o novo vai substituir
+    $this->view[] = $template;
+  }
+  
+  public function getView() {
+    return end($this->view);
+  }
+  
+  /**
+   * Adiciona um view como filho na "fila" de herança de templates.
+   * A herança padrão é: skin.tpl -> template.tpl -> controller.tpl
+   * Com esse método, é possivel acrescentar mais um nível de herança na estrutura de views
+   * @param type $template
+   */
+  public function addChildView($template) {
+    $this->view[] = $template;
   }
   
 }

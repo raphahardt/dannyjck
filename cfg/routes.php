@@ -24,6 +24,7 @@ $Router->map('/favicon.ico', 'home#favicon');
  * Rota padrão para página de erro
  */
 $Router->map('/error', array('ErrorController' => null), 'error');
+$Router->map('/min', 'home#min');
 
 /**
  * Rota padrão para conteúdos estáticos (imagens)

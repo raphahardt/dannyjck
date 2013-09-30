@@ -106,7 +106,11 @@ abstract class Core {
     
     // pega o caminho
     $abs_path = self::path($path);
-    $abs_path .= DS . $file;
+    if (strpos($abs_path, '.php') !== false) { // mudança 18/09/13 - permite que se coloque arquivos com nomes diferentes do da classe se colocar .php no final do path
+      $abs_path = substr($abs_path, 0, -4); // tira o .php, pq no codigo abaixo vai colocar de novo
+    } else {
+      $abs_path .= DS . $file; // o nome do arquivo é o nome da classe
+    }
     
     // alias para o arquivo
     $alias = $abs_path;
@@ -204,7 +208,7 @@ abstract class Core {
   final static function error_handler($errno, $errstr, $errfile, $errline) {
     $severity =
             1 * E_ERROR |
-            1 * E_WARNING |
+            0 * E_WARNING |
             1 * E_PARSE |
             0 * E_NOTICE |
             1 * E_CORE_ERROR |
@@ -216,19 +220,55 @@ abstract class Core {
             0 * E_USER_NOTICE |
             0 * E_STRICT |
             0 * E_RECOVERABLE_ERROR |
-            1 * E_DEPRECATED |
-            0 * E_USER_DEPRECATED;
+            1 * (defined('E_DEPRECATED') ? E_DEPRECATED : 0) |
+            0 * (defined('E_USER_DEPRECATED') ? E_USER_DEPRECATED : 0);
     $ex = new ErrorException($errstr, $errno, $errno, $errfile, $errline);
     if (($ex->getSeverity() & $severity) != 0) {
       throw $ex;
     }
   }
   
+  // hack para conseguir pegar erros fatais no php
+  final static function fatal_error_handler() {
+    $error = error_get_last();
+
+    if( $error !== NULL) {
+      $errno   = $error["type"];
+      $errfile = $error["file"];
+      $errline = $error["line"];
+      $errstr  = $error["message"];
+      
+      // limpa qualquer buffer que tenha sido criado
+      ob_end_clean();
+      
+      // manda o erro como exception e captura depois com o handler padrao
+      try {
+        self::error_handler($errno, $errstr, $errfile, $errline);
+      } catch (Exception $e) {
+        self::exception_handler($e);
+      }
+    }
+  }
+  
   final static function exception_handler($exception) {
-    echo "Uncaught exception: " , $exception->getMessage(), 
-            " on line ", $exception->getLine(), 
-            " in file ", $exception->getFile(), 
+    // manda header de erro 500 (erro interno de servidor)
+    if (!headers_sent())
+      header('Content-type: text/html; charset=UTF-8', true, 500);
+    
+    // imprime algo amigavel na tela pro visitante
+    echo '<html><head><title>Erro não capturado - '.SITE_TITLE.'</title></head>';
+    echo '<body>';
+    echo '<div style="margin:30px auto;border:1px solid #ccc;background:#eee;padding:15px;width:400px">';
+    echo '<span style="color:red">Erro não capturado:</span> ' , $exception->getMessage(), 
+            ' <div style="color:#999"> linha ', $exception->getLine(), 
+            ' - ', str_replace(DJCK, '', $exception->getFile()),
+            '</div>',
             "\n";
+    echo '</div>';
+    echo '</body></html>';
+    
+    // avisa o webmaster ou faz log
+    //mail('sistema13@furacao.com.br', 'teste erro', $exception->getMessage());
   }
   
   final static function setup() {
@@ -236,11 +276,12 @@ abstract class Core {
     spl_autoload_register(array('Core', 'load'));
     
     // define handler de errors do php para sempre jogarem exceptions
-    //error_reporting(0);
-    //set_error_handler(array('Core', 'error_handler'));
+    error_reporting(0);
+    set_error_handler(array('Core', 'error_handler'));
+    register_shutdown_function(array('Core', 'fatal_error_handler'));
     
     // lida com os exceptions que nao foram capturados
-    //set_exception_handler(array('Core', 'exception_handler'));
+    set_exception_handler(array('Core', 'exception_handler'));
   }
   
   static function dump() {

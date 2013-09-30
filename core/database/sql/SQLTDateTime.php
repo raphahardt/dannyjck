@@ -43,6 +43,13 @@ class SQLTDateTime extends DateTime {
     return $this->format('Y');
   }
   
+  public function toTimestamp() {
+    if (method_exists($this, 'getTimestamp')) {
+      return $this->getTimestamp();
+    }
+    return (int)$this->format('U');
+  }
+  
   public function toNiceTime($end_date = null) {
     if (!isset($end_date)) {
       $end_date = time(); // se a data final não for informada, seta ela como "agora"

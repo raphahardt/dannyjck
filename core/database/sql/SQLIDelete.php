@@ -48,12 +48,21 @@ class SQLIDelete extends SQLInstructionBase {
     
     parent::__toString();
     
+    // mysql não suporta alias na tabela com delete
+    // para resolver o problema, guardo o alias temporariamente
+    // e uso o nome da tabela como alias. depois, volto o alias como estava
+    $old_alias = $this->entity->getAlias();
+    $this->entity->setAlias(null);
+    
     $s = 'DELETE FROM ';
-    $s .= $this->entity . ' '. $this->entity->getAlias();
+    $s .= $this->entity;
     
     if ($this->filter) {
       $s .= ' WHERE '. $this->filter;
     }
+    
+    // volto o alias como estava
+    $this->entity->setAlias($old_alias);
     
     return $s;
   }  

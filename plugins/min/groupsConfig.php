@@ -11,12 +11,12 @@
  * See http://code.google.com/p/minify/wiki/CustomSource for other ideas
  **/
 
-require_once 'init.php';
+/*require_once 'init.php';
 
 if (!defined('_MIN_FILE')) exit();
 
 define('_DEFS_ONLY', true);
-require_once _MIN_FILE;
+require_once _MIN_FILE;*/
 
 $base = $app_groups = $core_groups = array();
 if (defined('APP_PATH') && is_file(APP_PATH . DS . 'cfg' . DS . 'min_groupscfg.php')) {
