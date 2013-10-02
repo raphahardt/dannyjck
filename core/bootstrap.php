@@ -52,6 +52,8 @@ if (!defined('PUBLIC_PATH'))
   define('PUBLIC_PATH', DJCK.DS.'public');
 
 define('OS', PHP_OS);
+define('_DEV', $_SERVER['HTTP_HOST'] === 'localhost');
+
 
 // funções basicas
 include CORE_PATH.DS.'basics.php';

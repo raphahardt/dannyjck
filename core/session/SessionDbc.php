@@ -23,7 +23,7 @@ class SessionDbc extends SessionCommon {
     
     $dbc = Dbc::getInstance();
     $dbc->prepare('select * from '.$this->table_name.' where sid = ?');
-    $dbc->bind_param($sid);
+    $dbc->bind_param(0, $sid);
     if ($dbc->execute()) {
       $row = $dbc->fetch_assoc();
       
@@ -49,15 +49,15 @@ class SessionDbc extends SessionCommon {
     $dbc = Dbc::getInstance();
     $dbc->prepare('insert into '.$this->table_name.' (id,sid,ip,timestamp,sessao) values (?,?,?,?,?) on duplicate key update id=?, timestamp=?,sessao=?');
     // insert
-    $dbc->bind_param($uid);
-    $dbc->bind_param($sid);
-    $dbc->bind_param($ip);
-    $dbc->bind_param($timestamp);
-    $dbc->bind_param($data);
+    $dbc->bind_param(0,$uid);
+    $dbc->bind_param(1,$sid);
+    $dbc->bind_param(2,$ip);
+    $dbc->bind_param(3,$timestamp);
+    $dbc->bind_param(4,$data);
     // update
-    $dbc->bind_param($uid);
-    $dbc->bind_param($timestamp);
-    $dbc->bind_param($data);
+    $dbc->bind_param(5,$uid);
+    $dbc->bind_param(6,$timestamp);
+    $dbc->bind_param(7,$data);
     $success = $dbc->execute();
 
     $dbc->free();
@@ -70,7 +70,7 @@ class SessionDbc extends SessionCommon {
     
     $dbc = Dbc::getInstance();
     $dbc->prepare('delete from '.$this->table_name.' where sid = ?');
-    $dbc->bind_param($sid);
+    $dbc->bind_param(0,$sid);
     $success = $dbc->execute();
 
     $dbc->free();
@@ -85,7 +85,7 @@ class SessionDbc extends SessionCommon {
     
     $dbc = Dbc::getInstance();
     $dbc->prepare('delete from '.$this->table_name.' where timestamp < ?');
-    $dbc->bind_param($time);
+    $dbc->bind_param(0,$time);
     $success = $dbc->execute();
 
     $dbc->free();

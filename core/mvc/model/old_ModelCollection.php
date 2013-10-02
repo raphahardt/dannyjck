@@ -303,7 +303,7 @@ class _ModelCollection extends _ModelCommon implements Iterator {
       if ($success = $success && $bd->prepare($sql)) {
         foreach ($bind_v as $k => $value) {
           // binda o valor
-          $bd->bind_param($bind_v[$k]);
+          $bd->bind_param($k, $bind_v[$k]);
         }
 
         // executa a query
@@ -377,7 +377,7 @@ class _ModelCollection extends _ModelCommon implements Iterator {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($bind_v[$k]);
+        $bd->bind_param($k, $bind_v[$k]);
       }
 
       // executa a query
@@ -454,7 +454,7 @@ class _ModelCollection extends _ModelCommon implements Iterator {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($bind_v[$k]);
+        $bd->bind_param($k, $bind_v[$k]);
       }
 
       // executa a query

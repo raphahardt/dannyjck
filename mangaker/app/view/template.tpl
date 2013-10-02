@@ -91,7 +91,7 @@
   {/block}
 {/block}
 {block 'site.body'}
-  <div class="container">
+  <div class="container" ng-app="reacao" id="ng-app">
   {block 'page.contents'}
   {/block}
   </div>

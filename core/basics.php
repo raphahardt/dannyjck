@@ -311,18 +311,119 @@ if (!function_exists('array_column')) {
 
 if (!function_exists('dump')) {
   
-  function dump() {
-    echo '<pre>';
-    print_r(array(
+  function dump($var) {
+    $props = _var_props($var);
+    
+    $colors = array(
+        'Dbc.php' => array('salmon', 'white'),
+        'FileMapper.php' => array('yellow', 'black'),
+    );
+    list($backc, $forec) = isset($colors[ $props['file'] ]) ? 
+            $colors[ $props['file'] ] : 
+            array('cyan', 'blue');
+    echo '<pre style="border:1px solid '.$backc.';background:white;font-family:Consolas,monospaced;font-size:13px;">';
+    echo '<div style="color:'.$forec.';background:'.$backc.';padding:10px;">';
+    echo '<strong>Nome: '.$props['name'].'</strong><br>';
+    echo '<strong>Arquivo: '.$props['file'].' linha '.$props['line'].'</strong><br>';
+    echo '</div><div style="padding:10px">';
+    if (is_array($var) || is_object($var))
+      print_r($var);
+    else
+      var_dump($var);
+    /*print_r(array(
         DJCK,
         CORE_PATH,
         APP_PATH,
         SITE_FULL_URL,
         SITE_URL,
         STATIC_URL,
-    ));
+    ));*/
+    echo '</div>';
     echo '</pre>';
+    //exit;
+  }
+  
+  function _var_props( $v ) {
+    $trace = debug_backtrace();
+    $vLine = file( $trace[1]['file'] );
+    $fLine = $vLine[ $trace[1]['line'] - 1 ];
+    preg_match( "#dump\((\\$?(\w+)(\s*(::|\->)\w+\s*\(?[^\)]*\)?|\[[^\]]*\])*)#", $fLine, $match );
+    return array(
+        'name' => $match[1] ? $match[1] : 'unknown',
+        'file' => basename($trace[1]['file']),
+        'line' => $trace[1]['line'],
+        'line_string' => $fLine,
+    );
+  }
+  
+  function finish() {
+    $end = microtime(true) - START;
+    echo '<pre style="border:1px solid purple;background:white;font-family:Consolas,monospaced;font-size:13px;">';
+    echo '<div style="color:white;background:purple;padding:10px;">';
+    echo '<strong>Tempo gasto: '.($end*1000).'ms ('.(round($end, 2)).' segundos)</strong><br>';
+    echo '</div></pre>';
     exit;
   }
   
+}
+
+if (!function_exists('str_putcsv')) {
+
+  /**
+   * Transforma um array em uma string em CSV.
+   * ex:
+   * array('col1', 'col2', 'col3 aaa', '', 'col5') -> col1,col2,"col3 aaa",,col5
+   * @param array $input Array que será convertido
+   * @param string $delimiter Caractere que será o separador. Padrão: vírgula
+   * @param string $enclosure Caractere que será o encapsulador. Padrão: aspas
+   * @return string
+   */
+  function str_putcsv($input, $delimiter = ',', $enclosure = '"') {
+    // Open a memory "file" for read/write...
+    $fp = fopen('php://temp', 'r+');
+    // ... write the $input array to the "file" using fputcsv()...
+    fputcsv($fp, $input, $delimiter, $enclosure);
+    // ... rewind the "file" so we can read what we just wrote...
+    rewind($fp);
+    // ... read the entire line into a variable...
+    $data = fgets($fp);
+    // ... close the "file"...
+    fclose($fp);
+    // ... and return the $data to the caller, with the trailing newline from fgets() removed.
+    return rtrim($data, "\n");
+  }
+
+}
+
+if (!function_exists('str_getcsv')) {
+
+  /**
+   * Transforma uma string em CSV em um array com os valores.
+   * ex:
+   * col1,col2,"col3 aaa",,col5 -> array('col1', 'col2', 'col3 aaa', '', 'col5')
+   * @param string $input Linha CSV a ser convertida
+   * @param string $delimiter Caractere que será o separador. Padrão: vírgula
+   * @param string $enclosure Caractere que será o encapsulador. Padrão: aspas
+   * @param string $escape Caractere que será o escape do encapsulador e de caracteres especiais
+   * @return array
+   */
+  function str_getcsv($input, $delimiter = ',', $enclosure = '"', $escape = '\\') {
+    // Open a memory "file" for read/write...
+    $fp = fopen('php://temp', 'r+');
+    // ... write the $input array to the "file" using fputcsv()...
+    fputs($fp, $input);
+    // ... rewind the "file" so we can read what we just wrote...
+    rewind($fp);
+    // ... read the entire line into a variable...
+    if (version_compare(PHP_VERSION, '5.3.0', '>=')) {
+      $data = fgetcsv($fp, 4196, $delimiter, $enclosure, $escape);
+    } else {
+      $data = fgetcsv($fp, 4196, $delimiter, $enclosure);
+    }
+    // ... close the "file"...
+    fclose($fp);
+    // ... and return the $data to the caller, with the trailing newline from fgets() removed.
+    return $data;
+  }
+
 }

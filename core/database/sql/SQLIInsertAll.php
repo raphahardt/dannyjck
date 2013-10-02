@@ -214,26 +214,32 @@ class SQLIInsertAll extends SQLInstructionBase implements SQLArrayAccess {
     $alias = $this->entity->getAlias();
     $this->entity->setAlias(null);
     
-    $s = 'INSERT ALL ';
+    $s = 'INSERT INTO '.$this->entity;
+    
+    $sFie = '';
+    foreach (reset($this->fields) as $key => $value) {
+      $sFie .= ( empty($sFie) ? '' : ', ' );
+      $sFie .= $this->entity->getField($key);
+    }
+    
+    $s .= ' (';
+    $s .= $sFie;
+    $s .= ') VALUES ';
+    
     foreach ($this->fields as $fields) {
-      $s .= 'INTO ';
-      $s .= $this->entity;
-
-      $sVal = $sFie = '';
+      
+      $sVal = '';
       foreach ($fields as $key => $value) {
-        $sFie .= ( empty($sFie) ? '' : ', ' );
-        $sFie .= $this->entity->getField($key);
         
         $sVal .= ( empty($sVal) ? '' : ', ' );
         $sVal .= SQLBase::parseValue($value);
       }
       
-      $s .= ' (';
-      $s .= $sFie;
-      $s .= ') VALUES (';
+      $s .= '(';
       $s .= $sVal;
-      $s .= ') ';
+      $s .= '),';
     }
+    $s = substr($s, 0, -1);
     
     /*if ($this->defs) {
       $s .= ' '.$this->defs;
@@ -242,6 +248,6 @@ class SQLIInsertAll extends SQLInstructionBase implements SQLArrayAccess {
     // devolve o alias da tabela
     $this->entity->setAlias($alias);
     
-    return $s . ' SELECT 1 FROM DUAL';
+    return $s;
   }  
 }

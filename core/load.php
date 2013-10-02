@@ -18,8 +18,11 @@ Core::import('SQLBase', 'core/database/sql');
 
 // mvc
 Core::import('Controller', 'core/mvc/controller');
+
+Core::import('Mapper', 'core/mvc/model');
+Core::import('Behavior', 'core/mvc/model');
 Core::import('Model', 'core/mvc/model');
-Core::import('ModelCollection', 'core/mvc/model');
+
 Core::import('View', 'core/mvc/view');
 
 // router
@@ -35,6 +38,10 @@ Core::import('Cookie', 'core/cookie');
 // logger
 Core::import('Logger', 'core/logger');
 
+// classes para debug, testes, e utilidades só usadas localmente
+if (_DEV) {
+  Core::import('UnitTest', 'core/utility');
+}
 
 $cfgfiles = array(
     'connections.php',

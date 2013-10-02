@@ -116,8 +116,8 @@ abstract class Core {
     $alias = $abs_path;
     foreach (array(CORE_PATH => 'core', 
                     APP_PATH => 'app', 
-                    PLUGIN_PATH => 'plugins') as $haystack => $replacement) {
-      $alias = str_replace($haystack, $replacement, $alias);
+                    PLUGIN_PATH => 'plugins') as $search => $replacement) {
+      $alias = str_replace($search, $replacement, $alias);
     }
     $alias = str_replace(DS, '.', $alias);
     
@@ -206,9 +206,14 @@ abstract class Core {
   }
   
   final static function error_handler($errno, $errstr, $errfile, $errline) {
+    // não mostra erros para quando for usado o @ nas expressões
+    // ver: http://www.php.net/manual/en/language.operators.errorcontrol.php
+    if (error_reporting() == 0) {
+      return true;
+    }
     $severity =
             1 * E_ERROR |
-            0 * E_WARNING |
+            1 * E_WARNING |
             1 * E_PARSE |
             0 * E_NOTICE |
             1 * E_CORE_ERROR |
@@ -252,12 +257,18 @@ abstract class Core {
   
   final static function exception_handler($exception) {
     // manda header de erro 500 (erro interno de servidor)
-    if (!headers_sent())
+    if (!headers_sent()) {
+      $html = true;
       header('Content-type: text/html; charset=UTF-8', true, 500);
+    } else {
+      $html = false;
+    }
     
     // imprime algo amigavel na tela pro visitante
-    echo '<html><head><title>Erro não capturado - '.SITE_TITLE.'</title></head>';
-    echo '<body>';
+    if ($html) {
+      echo '<html><head><title>Erro não capturado - '.SITE_TITLE.'</title></head>';
+      echo '<body>';
+    }
     echo '<div style="margin:30px auto;border:1px solid #ccc;background:#eee;padding:15px;width:400px">';
     echo '<span style="color:red">Erro não capturado:</span> ' , $exception->getMessage(), 
             ' <div style="color:#999"> linha ', $exception->getLine(), 
@@ -265,7 +276,9 @@ abstract class Core {
             '</div>',
             "\n";
     echo '</div>';
-    echo '</body></html>';
+    if ($html) {
+      echo '</body></html>';
+    }
     
     // avisa o webmaster ou faz log
     //mail('sistema13@furacao.com.br', 'teste erro', $exception->getMessage());
@@ -276,7 +289,8 @@ abstract class Core {
     spl_autoload_register(array('Core', 'load'));
     
     // define handler de errors do php para sempre jogarem exceptions
-    error_reporting(0);
+    //error_reporting(0); // COMENTADO PQ NÃO É PARA DESABILITAR OS ERROS POR AQUI
+    @ini_set('display_errors', false);
     set_error_handler(array('Core', 'error_handler'));
     register_shutdown_function(array('Core', 'fatal_error_handler'));
     
@@ -285,11 +299,7 @@ abstract class Core {
   }
   
   static function dump() {
-    global $Router;
-    echo '<pre>';
-    print_r(array(self::$classes, self::$imported, self::$calls, $Router, $_SESSION, ModelCommon::$dump));
-    //print_r(array($_SESSION, $_COOKIE));
-    echo '</pre>';
+    dump(array(self::$classes, self::$imported, self::$calls));
   }
   
 }

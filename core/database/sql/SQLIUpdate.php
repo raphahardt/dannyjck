@@ -215,9 +215,12 @@ class SQLIUpdate extends SQLInstructionBase implements SQLArrayAccess {
     $s .= ' SET ';
     
     $sSel = '';
-    foreach ($this->fields as $field) {
+    foreach ($this->fields as $key => $field) {
       $sSel .= ( empty($sSel) ? '' : ', ' );
-      $sSel .= $field . ' = '. SQLBase::parseValue($field->getValue());
+      if ($field instanceOf SQLBase)
+        $sSel .= $field . ' = '. SQLBase::parseValue($field->getValue());
+      else
+        $sSel .= $this->entity->getField($key) . ' = '. SQLBase::parseValue($field);
     }
     $s .= $sSel;
     

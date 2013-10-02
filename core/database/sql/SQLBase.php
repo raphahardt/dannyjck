@@ -10,6 +10,7 @@ Core::register('SQLFieldBase', 'core/database/sql');
 Core::register('SQLICall', 'core/database/sql');
 Core::register('SQLIDelete', 'core/database/sql');
 Core::register('SQLIInsert', 'core/database/sql');
+Core::register('SQLIInsertAll', 'core/database/sql');
 Core::register('SQLISelect', 'core/database/sql');
 Core::register('SQLIUpdate', 'core/database/sql');
 Core::register('SQLIOnDuplicate', 'core/database/sql');

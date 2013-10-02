@@ -309,6 +309,10 @@ class Dbc {
         // erro de conexão
         throw new DbcException(mysqli_errno($this->con) . ': ' . mysqli_error($this->con));
       }
+      
+      dump($this->stmt_query[$index]);
+      dump($this->stmt_values[$index]);
+      dump(is_object($this->stmt[$index]));
 
       // retorna se o query foi executado com sucesso
       return is_object($this->stmt[$index]);
@@ -316,7 +320,24 @@ class Dbc {
       // binda os parametros temporarios antes guardados
       if (!empty($this->stmt_values[$index])) {
         $values = array_merge((array) $this->stmt_binds[$index], $this->stmt_values[$index]);
-        call_user_func_array(array($this->stmt[$index], 'bind_param'), self::_refValues($values));
+        
+        // tenta evitar o uso do call_user_func_array, que é 4x mais lento que chamar
+        // a funcao diretamente
+        // veja: http://www.php.net/manual/en/function.call-user-func-array.php#100794
+        $stmt = &$this->stmt[$index];
+        /*switch (count($values)) {
+          case 1:
+            return $stmt->bind_param(&$values[0]);
+          case 2:
+            return $stmt->bind_param(&$values[0], &$values[1]);
+          case 3:
+            return $stmt->bind_param(&$values[0], &$values[1], &$values[2]);
+          case 4:
+            return $stmt->bind_param(&$values[0], &$values[1], &$values[2], &$values[3]);
+          default:*/
+            call_user_func_array(array($stmt, 'bind_param'), self::_refValues($values));
+        /*}*/
+        unset($stmt); // apaga ref
       }
 
       // executa o comando
@@ -326,6 +347,10 @@ class Dbc {
         // erro de conexão
         throw new DbcException(mysqli_errno($this->con) . ': ' . mysqli_error($this->con));
       }
+      
+      dump($this->stmt_query[$index]);
+      dump($this->stmt_values[$index]);
+      dump($success);
 
       return $success;
     }
@@ -374,7 +399,7 @@ class Dbc {
    * @param unknown_type $maxlength
    * @param unknown_type $type
    */
-  public function bind_param(&$value) {
+  public function bind_param($name, &$value) {
     $index = $this->stmt_index;
 
     // verificar o tipo de variavel e definir o tipo de bind

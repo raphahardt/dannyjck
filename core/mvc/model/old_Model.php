@@ -314,7 +314,7 @@ class _Model extends _ModelCommon {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($bind_v[$k]);
+        $bd->bind_param($k, $bind_v[$k]);
       }
 
       // executa a query
@@ -370,7 +370,7 @@ class _Model extends _ModelCommon {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($bind_v[$k]);
+        $bd->bind_param($k, $bind_v[$k]);
       }
 
       // executa a query
@@ -433,7 +433,7 @@ class _Model extends _ModelCommon {
           $bd->bind_param($criteria_values[$k_field], 4000); // para valores out, deve-se garantir o espaço
         } else {
           // binda o valor
-          $bd->bind_param($bind_v[$k]);
+          $bd->bind_param($k, $bind_v[$k]);
         }
       }
 
@@ -519,7 +519,7 @@ class _Model extends _ModelCommon {
     if ($success = $success && $bd->prepare($sql)) {
       foreach ($bind_v as $k => $value) {
         // binda o valor
-        $bd->bind_param($bind_v[$k]);
+        $bd->bind_param($k, $bind_v[$k]);
       }
 
       // executa a query
